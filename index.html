@@ -9,104 +9,63 @@
 <meta name="apple-mobile-web-app-title" content="Entradas">
 <meta name="theme-color" content="#0a0a0f">
 <title>Entradas · Castros & Carral</title>
-<link rel="apple-touch-icon" href="icon-192.png">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#0a0a0f; --s1:#111118; --s2:#18181f; --s3:#222230; --s4:#2a2a3a;
-  --border:#252535; --border2:#363650;
-  --castros:#f59e0b; --carral:#10b981;
-  --text:#f0eff8; --text2:#8887a0; --text3:#4a4a62;
-  --danger:#ef4444; --sat:env(safe-area-inset-top); --sab:env(safe-area-inset-bottom);
+  --bg:#0a0a0f;--s1:#111118;--s2:#18181f;--s3:#222230;--s4:#2a2a3a;
+  --border:#252535;--border2:#363650;
+  --castros:#f59e0b;--carral:#10b981;
+  --text:#f0eff8;--text2:#8887a0;--text3:#4a4a62;
+  --danger:#ef4444;--sat:env(safe-area-inset-top);--sab:env(safe-area-inset-bottom);
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 html,body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:14px;}
 body{display:flex;flex-direction:column;min-height:100dvh;}
 
-/* HEADER */
-.hdr{
-  display:flex;align-items:center;gap:10px;
-  background:rgba(10,10,15,0.92);
-  border-bottom:1px solid var(--border);
-  padding:calc(var(--sat) + 10px) 14px 10px;
-  position:sticky;top:0;z-index:50;
-  backdrop-filter:blur(16px);
-}
-.logo{
-  width:36px;height:36px;border-radius:10px;flex-shrink:0;
-  background:linear-gradient(135deg,#f59e0b,#d97706);
-  display:flex;align-items:center;justify-content:center;
-  font-size:18px;box-shadow:0 2px 12px rgba(245,158,11,.35);
-}
+.hdr{display:flex;align-items:center;gap:10px;background:rgba(10,10,15,0.94);border-bottom:1px solid var(--border);padding:calc(var(--sat) + 10px) 14px 10px;position:sticky;top:0;z-index:50;backdrop-filter:blur(16px);}
+.logo{width:36px;height:36px;border-radius:10px;flex-shrink:0;background:linear-gradient(135deg,#f59e0b,#d97706);display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 2px 12px rgba(245,158,11,.35);}
 .hdr-title{flex:1;min-width:0;}
 .hdr-title strong{display:block;font-size:14px;font-weight:700;letter-spacing:-.3px;}
 .hdr-title small{font-size:10px;color:var(--text3);}
+.sync-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--text3);margin-right:4px;vertical-align:middle;transition:.3s;}
+.sync-dot.ok{background:var(--carral);}
+.sync-dot.err{background:var(--danger);}
+.sync-dot.busy{background:var(--castros);animation:pulse 1s infinite;}
 
-/* Tienda toggle */
 .tgl{display:flex;background:var(--s3);border:1px solid var(--border);border-radius:10px;padding:3px;gap:3px;}
-.tgl-btn{
-  padding:5px 13px;border-radius:7px;border:none;cursor:pointer;
-  font-family:'Inter',sans-serif;font-weight:600;font-size:11px;
-  letter-spacing:.2px;transition:all .18s;color:var(--text3);background:transparent;
-}
+.tgl-btn{padding:5px 13px;border-radius:7px;border:none;cursor:pointer;font-family:'Inter',sans-serif;font-weight:600;font-size:11px;letter-spacing:.2px;transition:all .18s;color:var(--text3);background:transparent;}
 .tgl-btn.on-c{background:var(--castros);color:#000;box-shadow:0 1px 8px rgba(245,158,11,.4);}
 .tgl-btn.on-r{background:var(--carral);color:#000;box-shadow:0 1px 8px rgba(16,185,129,.4);}
-
 .hdr-end{display:flex;gap:6px;align-items:center;}
-.xls-btn{
-  height:34px;padding:0 13px;background:#166534;border:1px solid #15803d;
-  border-radius:9px;color:#dcfce7;font-family:'Inter',sans-serif;
-  font-weight:600;font-size:11px;cursor:pointer;white-space:nowrap;
-}
-.ico-btn{
-  width:34px;height:34px;background:var(--s2);border:1px solid var(--border);
-  border-radius:9px;display:flex;align-items:center;justify-content:center;
-  cursor:pointer;font-size:15px;color:var(--text2);transition:.15s;
-}
+.xls-btn{height:34px;padding:0 13px;background:#166534;border:1px solid #15803d;border-radius:9px;color:#dcfce7;font-family:'Inter',sans-serif;font-weight:600;font-size:11px;cursor:pointer;white-space:nowrap;}
+.ico-btn{width:34px;height:34px;background:var(--s2);border:1px solid var(--border);border-radius:9px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;color:var(--text2);transition:.15s;}
 .ico-btn:hover{border-color:var(--castros);color:var(--castros);}
 
-/* LAYOUT */
 .main{display:grid;grid-template-columns:1fr 1fr;flex:1;overflow:hidden;height:calc(100dvh - 57px);}
 .pnl{overflow-y:auto;padding:18px;}
 .pnl-l{border-right:1px solid var(--border);}
 
-/* TABS */
 .tabs{display:flex;background:var(--s2);border:1px solid var(--border);border-radius:11px;padding:4px;gap:4px;margin-bottom:18px;}
 .tab{flex:1;padding:9px 6px;text-align:center;font-size:12px;font-weight:600;cursor:pointer;border-radius:8px;color:var(--text2);transition:.18s;}
 .tab.on{background:var(--s3);color:var(--text);box-shadow:0 1px 6px rgba(0,0,0,.3);}
 
-/* SECTION LABEL */
-.lbl{
-  font-size:9px;font-weight:600;letter-spacing:2px;text-transform:uppercase;
-  color:var(--text3);margin:16px 0 9px;display:flex;align-items:center;gap:8px;
-}
+.lbl{font-size:9px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin:16px 0 9px;display:flex;align-items:center;gap:8px;}
 .lbl:first-child{margin-top:0;}
 .lbl::after{content:'';flex:1;height:1px;background:var(--border);}
 
-/* DROP ZONE */
-.dz{
-  background:var(--s1);border:1.5px dashed var(--border2);border-radius:11px;
-  padding:26px 16px;text-align:center;cursor:pointer;transition:.2s;margin-bottom:10px;
-}
+.dz{background:var(--s1);border:1.5px dashed var(--border2);border-radius:11px;padding:26px 16px;text-align:center;cursor:pointer;transition:.2s;margin-bottom:10px;}
 .dz:hover,.dz.over{border-color:var(--castros);background:rgba(245,158,11,.04);}
 .dz-ico{font-size:30px;margin-bottom:7px;}
 .dz-txt{font-size:12px;color:var(--text2);line-height:1.5;}
 .dz-txt b{color:var(--castros);}
-
 .img-prev{display:none;border-radius:11px;overflow:hidden;margin-bottom:10px;position:relative;}
 .img-prev img{width:100%;max-height:200px;object-fit:contain;background:#000;display:block;}
 .img-ov{position:absolute;top:8px;right:8px;}
 .cam-box{display:none;border-radius:11px;overflow:hidden;background:#000;margin-bottom:10px;}
 #cam-video{width:100%;max-height:250px;object-fit:cover;display:block;}
 
-/* BUTTONS */
-.btn{
-  padding:9px 14px;border-radius:9px;border:1px solid var(--border);
-  background:var(--s2);color:var(--text);font-family:'Inter',sans-serif;
-  font-weight:500;font-size:12px;cursor:pointer;transition:.15s;
-  display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:38px;
-}
+.btn{padding:9px 14px;border-radius:9px;border:1px solid var(--border);background:var(--s2);color:var(--text);font-family:'Inter',sans-serif;font-weight:500;font-size:12px;cursor:pointer;transition:.15s;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:38px;}
 .btn:hover{border-color:var(--border2);background:var(--s3);}
 .btn-p{background:var(--castros);color:#000;border-color:var(--castros);font-weight:700;}
 .btn-p:hover{background:#d97706;border-color:#d97706;}
@@ -115,95 +74,54 @@ body{display:flex;flex-direction:column;min-height:100dvh;}
 .btn-sm{padding:5px 10px;font-size:11px;min-height:30px;border-radius:7px;}
 .btn-fw{width:100%;}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
-
-.scan-btn{
-  width:100%;padding:14px;background:linear-gradient(135deg,var(--castros),#d97706);
-  color:#000;border:none;border-radius:11px;font-family:'Inter',sans-serif;
-  font-weight:700;font-size:13px;cursor:pointer;transition:.2s;margin-bottom:10px;
-  box-shadow:0 2px 14px rgba(245,158,11,.25);
-}
+.scan-btn{width:100%;padding:14px;background:linear-gradient(135deg,var(--castros),#d97706);color:#000;border:none;border-radius:11px;font-family:'Inter',sans-serif;font-weight:700;font-size:13px;cursor:pointer;transition:.2s;margin-bottom:10px;box-shadow:0 2px 14px rgba(245,158,11,.25);}
 .scan-btn:hover{transform:translateY(-1px);box-shadow:0 4px 18px rgba(245,158,11,.35);}
-.scan-btn:active{transform:none;}
 .scan-btn:disabled{opacity:.5;cursor:not-allowed;transform:none;}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+@keyframes spin{to{transform:rotate(360deg)}}
 .busy{animation:pulse 1.1s infinite;}
 
-/* FORM */
 .fg{margin-bottom:10px;}
 .fg label{display:block;font-size:10px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:var(--text3);margin-bottom:5px;}
-.fg input,.fg select{
-  width:100%;background:var(--s2);border:1px solid var(--border);border-radius:9px;
-  color:var(--text);padding:9px 12px;font-family:'Inter',sans-serif;font-size:13px;
-  transition:.15s;min-height:40px;
-}
+.fg input,.fg select{width:100%;background:var(--s2);border:1px solid var(--border);border-radius:9px;color:var(--text);padding:9px 12px;font-family:'Inter',sans-serif;font-size:13px;transition:.15s;min-height:40px;}
 .fg input:focus,.fg select:focus{outline:none;border-color:var(--castros);}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-
 .api-row{display:flex;gap:6px;margin-bottom:14px;}
-.api-row input{
-  flex:1;background:var(--s2);border:1px solid var(--border);border-radius:9px;
-  color:var(--text);padding:9px 12px;font-family:'JetBrains Mono',monospace;font-size:11px;min-height:38px;
-}
+.api-row input{flex:1;background:var(--s2);border:1px solid var(--border);border-radius:9px;color:var(--text);padding:9px 12px;font-family:'JetBrains Mono',monospace;font-size:11px;min-height:38px;}
 .api-row input:focus{outline:none;border-color:var(--castros);}
 
-/* TABLE */
 .tbl-wrap{overflow-x:auto;margin-bottom:8px;border:1px solid var(--border);border-radius:11px;}
 table{width:100%;border-collapse:collapse;font-size:12px;}
-thead th{
-  background:var(--s2);color:var(--text3);font-size:9px;font-weight:600;
-  letter-spacing:1.2px;text-transform:uppercase;padding:8px 7px;
-  text-align:left;white-space:nowrap;border-bottom:1px solid var(--border);
-}
+thead th{background:var(--s2);color:var(--text3);font-size:9px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;padding:8px 7px;text-align:left;white-space:nowrap;border-bottom:1px solid var(--border);}
 tbody td{padding:4px 4px;border-bottom:1px solid rgba(37,37,53,.6);vertical-align:middle;}
 tbody tr:last-child td{border-bottom:none;}
 tbody tr:hover td{background:rgba(245,158,11,.025);}
-.ti{
-  width:100%;background:transparent;border:1px solid transparent;border-radius:6px;
-  color:var(--text);padding:4px 6px;font-family:'JetBrains Mono',monospace;font-size:11px;
-}
+.ti{width:100%;background:transparent;border:1px solid transparent;border-radius:6px;color:var(--text);padding:4px 6px;font-family:'JetBrains Mono',monospace;font-size:11px;}
 .ti:focus{outline:none;border-color:var(--border2);background:var(--s2);}
 .ts{background:var(--s2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:4px 5px;font-size:11px;}
 .tc{color:var(--castros);font-family:'JetBrains Mono',monospace;font-weight:500;white-space:nowrap;padding:4px 8px;}
 .tbl-foot{display:flex;justify-content:space-between;align-items:center;padding:8px 4px;}
 .tbl-sum{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;color:var(--castros);}
 
-/* SCANNING */
 .scanning{display:none;text-align:center;padding:10px;font-size:12px;color:var(--text2);}
-@keyframes spin{to{transform:rotate(360deg)}}
 .spin{display:inline-block;width:13px;height:13px;border:2px solid var(--border2);border-top-color:var(--castros);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px;}
 .err-box{display:none;background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.25);border-radius:9px;padding:10px 12px;font-size:11px;color:var(--danger);margin-bottom:10px;}
-
-/* RESULT */
 .result-pnl{display:none;}
 
-/* KPIs */
 .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px;}
-.kpi{
-  background:var(--s1);border:1px solid var(--border);border-radius:11px;
-  padding:12px 8px;text-align:center;
-}
+.kpi{background:var(--s1);border:1px solid var(--border);border-radius:11px;padding:12px 8px;text-align:center;}
 .kpi-v{font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:700;color:var(--castros);line-height:1;margin-bottom:4px;}
 .kpi-l{font-size:8px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--text3);}
 
-/* FILTER */
 .fbar{display:flex;gap:6px;margin-bottom:12px;align-items:center;flex-wrap:wrap;}
 .fbar span{font-size:10px;color:var(--text3);}
-.fbtn{
-  padding:5px 12px;border-radius:20px;border:1px solid var(--border);
-  background:transparent;color:var(--text2);font-size:11px;font-weight:500;
-  cursor:pointer;transition:.15s;min-height:28px;font-family:'Inter',sans-serif;
-}
-.fbtn:hover{border-color:var(--border2);}
+.fbtn{padding:5px 12px;border-radius:20px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:11px;font-weight:500;cursor:pointer;transition:.15s;min-height:28px;font-family:'Inter',sans-serif;}
 .fbtn.fa{background:var(--s3);color:var(--text);border-color:var(--border2);}
 .fbtn.fc{background:rgba(245,158,11,.15);color:var(--castros);border-color:rgba(245,158,11,.4);}
 .fbtn.fr{background:rgba(16,185,129,.15);color:var(--carral);border-color:rgba(16,185,129,.4);}
 
-/* ENTRY CARDS */
 .entries{display:flex;flex-direction:column;gap:8px;}
-.ecard{
-  background:var(--s1);border:1px solid var(--border);border-radius:11px;
-  padding:12px 14px;display:flex;align-items:center;gap:10px;transition:.15s;
-}
+.ecard{background:var(--s1);border:1px solid var(--border);border-radius:11px;padding:12px 14px;display:flex;align-items:center;gap:10px;transition:.15s;}
 .ecard:hover{border-color:var(--border2);}
 .eleft{flex:1;min-width:0;}
 .enum{font-family:'JetBrains Mono',monospace;font-weight:600;font-size:13px;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -216,61 +134,28 @@ tbody tr:hover td{background:rgba(245,158,11,.025);}
 .b-r{background:rgba(16,185,129,.12);color:var(--carral);border:1px solid rgba(16,185,129,.3);}
 .eright{display:flex;align-items:center;gap:6px;flex-shrink:0;}
 .eamt{font-family:'JetBrains Mono',monospace;font-weight:700;font-size:15px;color:var(--castros);}
-
-/* DEL BTN */
-.del-btn{
-  background:none;border:1px solid rgba(239,68,68,.25);color:var(--text3);
-  cursor:pointer;font-size:14px;padding:4px 8px;border-radius:7px;
-  transition:.15s;line-height:1;
-}
+.del-btn{background:none;border:1px solid rgba(239,68,68,.25);color:var(--text3);cursor:pointer;font-size:14px;padding:4px 8px;border-radius:7px;transition:.15s;line-height:1;}
 .del-btn:hover{color:var(--danger);background:rgba(239,68,68,.1);border-color:rgba(239,68,68,.4);}
 
-/* EMPTY */
 .empty{text-align:center;padding:40px 20px;color:var(--text3);}
 .empty-ico{font-size:36px;margin-bottom:10px;opacity:.3;}
 .empty-txt{font-size:12px;line-height:1.6;}
 
-/* EXPORT CARD */
 .exp-card{background:var(--s1);border:1px solid var(--border);border-radius:11px;padding:14px;margin-top:14px;}
 .exp-card h4{font-size:11px;font-weight:600;margin-bottom:10px;color:var(--text2);}
 .exp-hint{font-size:10px;color:var(--text3);margin-top:8px;line-height:1.6;}
 
-/* MODAL */
-.modal{
-  display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);
-  z-index:1000;overflow-y:auto;padding:16px;
-  padding-bottom:calc(16px + var(--sab));
-  backdrop-filter:blur(6px);
-}
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:1000;overflow-y:auto;padding:16px;padding-bottom:calc(16px + var(--sab));backdrop-filter:blur(6px);}
 .modal.open{display:block;}
-.modal-box{
-  max-width:860px;margin:0 auto;background:var(--s1);
-  border:1px solid var(--border2);border-radius:16px;
-  padding:20px;box-shadow:0 24px 64px rgba(0,0,0,.65);
-}
+.modal-box{max-width:860px;margin:0 auto;background:var(--s1);border:1px solid var(--border2);border-radius:16px;padding:20px;box-shadow:0 24px 64px rgba(0,0,0,.65);}
 .modal-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;}
 .modal-title{font-size:15px;font-weight:700;}
 
-/* TOAST */
-.toast{
-  position:fixed;bottom:calc(18px + var(--sab));left:50%;transform:translateX(-50%);
-  background:var(--s2);border:1px solid var(--border2);border-radius:10px;
-  padding:10px 20px;font-size:12px;font-weight:500;z-index:2000;
-  display:none;box-shadow:0 4px 24px rgba(0,0,0,.5);white-space:nowrap;max-width:90vw;
-}
+.toast{position:fixed;bottom:calc(18px + var(--sab));left:50%;transform:translateX(-50%);background:var(--s2);border:1px solid var(--border2);border-radius:10px;padding:10px 20px;font-size:12px;font-weight:500;z-index:2000;display:none;box-shadow:0 4px 24px rgba(0,0,0,.5);white-space:nowrap;max-width:90vw;}
 .toast.ok{border-color:var(--carral);color:#34d399;}
 .toast.err{border-color:var(--danger);color:var(--danger);}
 .toast.info{border-color:var(--castros);color:var(--castros);}
 
-/* PWA */
-.pwa-bar{
-  display:none;position:fixed;bottom:calc(68px + var(--sab));left:50%;
-  transform:translateX(-50%);background:var(--s2);border:1px solid var(--castros);
-  border-radius:14px;padding:13px 16px;z-index:1500;
-  box-shadow:0 8px 32px rgba(0,0,0,.5);max-width:340px;width:calc(100% - 32px);
-}
-
-/* MOBILE */
 @media(max-width:768px){
   .main{grid-template-columns:1fr;height:auto;overflow:visible;}
   .pnl-l{border-right:none;border-bottom:1px solid var(--border);}
@@ -289,7 +174,7 @@ select option{background:var(--s2);}
   <div class="logo">📦</div>
   <div class="hdr-title">
     <strong>Entradas</strong>
-    <small id="hdr-sub">—</small>
+    <small><span class="sync-dot" id="sync-dot"></span><span id="sync-txt">Conectando…</span></small>
   </div>
   <div class="tgl">
     <button class="tgl-btn" id="tb-c" onclick="setTienda('Castros')">Castros</button>
@@ -303,9 +188,8 @@ select option{background:var(--s2);}
 
 <div class="main">
 
-<!-- ── PANEL IZQ ── -->
+<!-- PANEL IZQ -->
 <div class="pnl pnl-l">
-
   <div class="lbl">Clave API Anthropic</div>
   <div class="api-row">
     <input type="password" id="api-key" placeholder="sk-ant-api03-…" oninput="localStorage.setItem('ocr_api_key',this.value)">
@@ -343,7 +227,6 @@ select option{background:var(--s2);}
     <button class="scan-btn" id="scan-btn" onclick="escanear()">🔍 &nbsp;Analizar con OCR</button>
     <div class="scanning" id="scanning"><span class="spin"></span>Analizando albarán…</div>
     <div class="err-box" id="err-box"></div>
-
     <div class="result-pnl" id="result-pnl">
       <div class="lbl">Resultado — revisa y confirma</div>
       <div class="g2">
@@ -365,7 +248,7 @@ select option{background:var(--s2);}
         <button class="btn" onclick="descartarOcr()">Descartar</button>
       </div>
     </div>
-  </div><!-- /tab-ocr -->
+  </div>
 
   <!-- MANUAL TAB -->
   <div id="tab-man" style="display:none">
@@ -388,10 +271,9 @@ select option{background:var(--s2);}
     <div class="fg" style="margin-top:8px;"><label>Observaciones</label><input type="text" id="m-obs" placeholder="Opcional"></div>
     <button class="btn btn-p btn-fw" style="margin-top:8px;" onclick="guardarManual()">✓ Añadir entrada</button>
   </div>
+</div>
 
-</div><!-- /pnl-l -->
-
-<!-- ── PANEL DER ── -->
+<!-- PANEL DER -->
 <div class="pnl">
   <div class="kpis">
     <div class="kpi"><div class="kpi-v" id="k-n">0</div><div class="kpi-l">Entradas</div></div>
@@ -407,13 +289,12 @@ select option{background:var(--s2);}
   </div>
   <div id="entries" class="entries"></div>
   <div class="exp-card">
-    <h4>📊 Exportar</h4>
-    <button class="btn btn-fw" style="background:#166534;color:#dcfce7;border-color:#15803d;font-weight:600;" onclick="exportarExcel()">↓ Descargar todas las entradas (.xlsx)</button>
-    <div class="exp-hint">Genera hojas separadas para Castros, Carral y una comparativa.</div>
+    <h4>📊 Exportar — datos de ambas tiendas</h4>
+    <button class="btn btn-fw" style="background:#166534;color:#dcfce7;border-color:#15803d;font-weight:600;" onclick="exportarExcel()">↓ Descargar Excel completo (.xlsx)</button>
+    <div class="exp-hint">Incluye hojas separadas para Castros, Carral y comparativa entre tiendas.</div>
   </div>
 </div>
-
-</div><!-- /main -->
+</div>
 
 <!-- MODAL EDICIÓN -->
 <div class="modal" id="modal-ed">
@@ -453,51 +334,142 @@ select option{background:var(--s2);}
   </div>
 </div>
 
-<!-- PWA BANNERS -->
-<div class="pwa-bar" id="pwa-bar">
-  <div style="display:flex;align-items:center;gap:12px;">
-    <div style="font-size:26px;">📦</div>
-    <div style="flex:1;"><div style="font-weight:700;font-size:13px;">Instalar app</div><div style="font-size:10px;color:var(--text2);margin-top:2px;">Acceso rápido desde pantalla de inicio</div></div>
-    <button onclick="installPwa()" class="btn btn-p btn-sm">Instalar</button>
-    <button onclick="document.getElementById('pwa-bar').style.display='none'" style="background:none;border:none;color:var(--text3);cursor:pointer;font-size:18px;">✕</button>
-  </div>
-</div>
-<div class="pwa-bar" id="ios-hint" style="border-color:var(--carral);">
-  <div style="text-align:center;">
-    <div style="font-size:22px;margin-bottom:7px;">📲</div>
-    <div style="font-weight:700;margin-bottom:6px;">Instalar en iPhone/iPad</div>
-    <div style="font-size:11px;color:var(--text2);line-height:1.6;">Pulsa <b style="color:var(--castros)">⬆ Compartir</b> en Safari<br>y luego <b style="color:var(--castros)">"Añadir a pantalla de inicio"</b></div>
-    <button onclick="document.getElementById('ios-hint').style.display='none'" class="btn btn-sm" style="margin-top:10px;">Entendido</button>
-  </div>
-</div>
-
 <div class="toast" id="toast"></div>
 
 <script>
-// ═══════════════════ STATE ═══════════════════
-const STORE='entradas_v3';
+// ═══════════════════ SUPABASE CONFIG ═════════════════════
+const SB_URL = 'https://hiymglxodchppuubznyx.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhpeW1nbHhvZGNocHB1dWJ6bnl4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4ODM0MDMsImV4cCI6MjA4NzQ1OTQwM30.BVKo7PkSai-AlW37_wAMJhz4lARjg4H6lfcfuxa9m_U';
+const HEADERS = {'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY};
+
+async function sbFetch(path, opts={}) {
+  const res = await fetch(SB_URL+'/rest/v1/'+path, {headers:HEADERS, ...opts});
+  if(!res.ok) { const e=await res.text(); throw new Error(e); }
+  return res.status===204 ? null : res.json();
+}
+
+// ═══════════════════ STATE ════════════════════
 let entries=[], tiendaA='Castros', filtro='todas';
 let ocrL=[], manL=[], edL=[], editIdx=-1;
 let camStream=null, imgB64=null, imgMime='image/jpeg';
 
 // ═══════════════════ INIT ════════════════════
-window.onload=()=>{
+window.onload=async()=>{
   document.getElementById('api-key').value=localStorage.getItem('ocr_api_key')||'';
   document.getElementById('m-fecha').value=hoy();
-  cargarLocal();
   setTienda(localStorage.getItem('tienda')||'Castros');
   addLineaM();
-  renderEntries();
+  await cargarSupabase();
 };
 
 function hoy(){return new Date().toISOString().split('T')[0];}
+
+function setSyncStatus(state, msg) {
+  const dot=document.getElementById('sync-dot');
+  const txt=document.getElementById('sync-txt');
+  dot.className='sync-dot '+state;
+  txt.textContent=msg;
+}
+
+// ═══════════════════ SUPABASE CRUD ═══════════
+async function cargarSupabase() {
+  setSyncStatus('busy','Cargando…');
+  try {
+    const data = await sbFetch('albaranes?order=ts.desc&select=*');
+    entries = data.map(r=>({
+      _id: r.id,
+      tienda: r.tienda,
+      albaran: r.albaran,
+      fecha: r.fecha,
+      proveedor: r.proveedor,
+      cif: r.cif||'',
+      obs: r.obs||'',
+      origenOcr: r.origen_ocr,
+      lineas: r.lineas||[],
+      ts: r.ts
+    }));
+    renderEntries();
+    setSyncStatus('ok', entries.length+' entradas cargadas');
+  } catch(e) {
+    setSyncStatus('err','Sin conexión — modo local');
+    // fallback local
+    try { const s=localStorage.getItem('entradas_v3'); if(s) entries=JSON.parse(s); } catch(ex){}
+    renderEntries();
+    toast('⚠️ Sin conexión con Supabase','err');
+  }
+}
+
+async function guardarEnSupabase(entrada) {
+  setSyncStatus('busy','Guardando…');
+  try {
+    const payload = {
+      tienda: entrada.tienda,
+      albaran: entrada.albaran,
+      fecha: entrada.fecha,
+      proveedor: entrada.proveedor,
+      cif: entrada.cif||'',
+      obs: entrada.obs||'',
+      origen_ocr: entrada.origenOcr||false,
+      lineas: entrada.lineas,
+      ts: entrada.ts||Date.now()
+    };
+    const res = await sbFetch('albaranes', {
+      method:'POST',
+      body: JSON.stringify(payload),
+      headers:{...HEADERS,'Prefer':'return=representation'}
+    });
+    const id = res[0].id;
+    setSyncStatus('ok','Guardado ✓');
+    return id;
+  } catch(e) {
+    setSyncStatus('err','Error al guardar');
+    toast('❌ Error al guardar en Supabase','err');
+    return null;
+  }
+}
+
+async function actualizarEnSupabase(entrada) {
+  if(!entrada._id) return;
+  setSyncStatus('busy','Actualizando…');
+  try {
+    await sbFetch('albaranes?id=eq.'+entrada._id, {
+      method:'PATCH',
+      body: JSON.stringify({
+        tienda: entrada.tienda,
+        albaran: entrada.albaran,
+        fecha: entrada.fecha,
+        proveedor: entrada.proveedor,
+        cif: entrada.cif||'',
+        obs: entrada.obs||'',
+        origen_ocr: entrada.origenOcr||false,
+        lineas: entrada.lineas,
+      }),
+      headers:{...HEADERS,'Prefer':'return=minimal'}
+    });
+    setSyncStatus('ok','Actualizado ✓');
+  } catch(e) {
+    setSyncStatus('err','Error al actualizar');
+    toast('❌ Error al actualizar','err');
+  }
+}
+
+async function borrarEnSupabase(id) {
+  if(!id) return;
+  try {
+    await sbFetch('albaranes?id=eq.'+id, {method:'DELETE'});
+  } catch(e) {
+    toast('❌ Error al borrar','err');
+  }
+}
+
+// Guardar también local como backup
+function guardarLocal(){try{localStorage.setItem('entradas_v3',JSON.stringify(entries));}catch(e){}}
 
 // ═══════════════════ TIENDA ══════════════════
 function setTienda(t){
   tiendaA=t; localStorage.setItem('tienda',t);
   document.getElementById('tb-c').className='tgl-btn'+(t==='Castros'?' on-c':'');
   document.getElementById('tb-r').className='tgl-btn'+(t==='Carral' ?' on-r':'');
-  document.getElementById('hdr-sub').textContent='Tienda activa: '+t;
 }
 function setEdTienda(t){
   document.getElementById('ed-tienda').value=t;
@@ -514,20 +486,19 @@ function switchTab(tab){
 }
 function toggleApiKey(){const i=document.getElementById('api-key');i.type=i.type==='password'?'text':'password';}
 
-// ═══════════════════ FILE / CAM ══════════════
+// ═══════════════════ FILE/CAM ════════════════
 function doDrop(e){e.preventDefault();document.getElementById('dz').classList.remove('over');if(e.dataTransfer.files[0])handleFile(e.dataTransfer.files[0]);}
 function handleFile(f){
   if(!f)return;
   const r=new FileReader();
   r.onload=ev=>{
-    imgB64=ev.target.result.split(',')[1]; imgMime=f.type||'image/jpeg';
+    imgB64=ev.target.result.split(',')[1];imgMime=f.type||'image/jpeg';
     const img=document.getElementById('prev-img');
     img.src=f.type==='application/pdf'?'':ev.target.result;
     img.alt=f.type==='application/pdf'?'📄 '+f.name:'';
     document.getElementById('img-prev').style.display='block';
-    cerrarCam(); toast('Cargado: '+f.name,'ok');
+    cerrarCam();toast('Cargado: '+f.name,'ok');
   };
-  r.onerror=()=>toast('Error al leer el archivo','err');
   r.readAsDataURL(f);
 }
 function limpiarImg(){imgB64=null;document.getElementById('img-prev').style.display='none';document.getElementById('prev-img').src='';}
@@ -596,55 +567,60 @@ IVA España: alimentos básicos 4%, generales 10%, otros 21%.`;
 }
 
 function addLineaR(){ocrL.push({articulo:'',referencia:'',cantidad:0,unidad:'ud',precio:0,iva:10,lote:'',caducidad:''});renderTbl('r-tb',ocrL,'ocrL','r-tot');}
-function confirmarOcr(){
+
+async function confirmarOcr(){
   const alb=document.getElementById('r-alb').value.trim(),prov=document.getElementById('r-prov').value.trim();
   if(!alb||!prov){toast('Albarán y proveedor obligatorios','err');return;}
-  entries.unshift({albaran:alb,proveedor:prov,fecha:document.getElementById('r-fecha').value||hoy(),cif:document.getElementById('r-cif').value.trim(),lineas:JSON.parse(JSON.stringify(ocrL)),obs:'',origenOcr:true,tienda:tiendaA,ts:Date.now()});
-  guardarLocal();renderEntries();document.getElementById('result-pnl').style.display='none';limpiarImg();ocrL=[];
-  toast('✅ Entrada OCR añadida','ok');
+  const entrada={albaran:alb,proveedor:prov,fecha:document.getElementById('r-fecha').value||hoy(),cif:document.getElementById('r-cif').value.trim(),lineas:JSON.parse(JSON.stringify(ocrL)),obs:'',origenOcr:true,tienda:tiendaA,ts:Date.now()};
+  const id = await guardarEnSupabase(entrada);
+  if(id) entrada._id=id;
+  entries.unshift(entrada);
+  guardarLocal();renderEntries();
+  document.getElementById('result-pnl').style.display='none';limpiarImg();ocrL=[];
+  toast('✅ Entrada añadida y sincronizada','ok');
 }
 function descartarOcr(){document.getElementById('result-pnl').style.display='none';ocrL=[];}
 
 // ═══════════════════ MANUAL ══════════════════
 function addLineaM(){manL.push({articulo:'',referencia:'',cantidad:'',unidad:'kg',precio:'',iva:10,lote:'',caducidad:''});renderTbl('m-tb',manL,'manL','m-tot');}
-function guardarManual(){
+
+async function guardarManual(){
   const alb=document.getElementById('m-alb').value.trim(),prov=document.getElementById('m-prov').value.trim();
   if(!alb||!prov){toast('Albarán y proveedor obligatorios','err');return;}
   const ok=manL.filter(l=>(l.articulo||'').trim());
   if(!ok.length){toast('Añade al menos un artículo','err');return;}
-  entries.unshift({albaran:alb,proveedor:prov,fecha:document.getElementById('m-fecha').value||hoy(),cif:document.getElementById('m-cif').value.trim(),lineas:JSON.parse(JSON.stringify(ok)),obs:document.getElementById('m-obs').value.trim(),origenOcr:false,tienda:tiendaA,ts:Date.now()});
+  const entrada={albaran:alb,proveedor:prov,fecha:document.getElementById('m-fecha').value||hoy(),cif:document.getElementById('m-cif').value.trim(),lineas:JSON.parse(JSON.stringify(ok)),obs:document.getElementById('m-obs').value.trim(),origenOcr:false,tienda:tiendaA,ts:Date.now()};
+  const id = await guardarEnSupabase(entrada);
+  if(id) entrada._id=id;
+  entries.unshift(entrada);
   guardarLocal();renderEntries();
   ['m-alb','m-cif','m-prov','m-obs'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('m-fecha').value=hoy();
   manL=[];addLineaM();
-  toast('✅ Entrada manual añadida','ok');
+  toast('✅ Entrada añadida y sincronizada','ok');
 }
 
-// ═══════════════════ RENDER ENTRIES ══════════
+// ═══════════════════ RENDER ══════════════════
 function setFiltro(f){
   filtro=f;
-  document.getElementById('f-a').className='fbtn'+(f==='todas'   ?' fa':'');
-  document.getElementById('f-c').className='fbtn'+(f==='Castros' ?' fc':'');
-  document.getElementById('f-r').className='fbtn'+(f==='Carral'  ?' fr':'');
+  document.getElementById('f-a').className='fbtn'+(f==='todas'?' fa':'');
+  document.getElementById('f-c').className='fbtn'+(f==='Castros'?' fc':'');
+  document.getElementById('f-r').className='fbtn'+(f==='Carral'?' fr':'');
   renderEntries();
 }
-
 function calcTot(e){return e.lineas.reduce((s,l)=>s+(+l.cantidad||0)*(+l.precio||0)*(1+(+l.iva||0)/100),0);}
 
 function renderEntries(){
   const filtradas=filtro==='todas'?entries:entries.filter(e=>e.tienda===filtro);
-  // KPIs sobre FILTRADAS
   document.getElementById('k-n').textContent=filtradas.length;
   document.getElementById('k-l').textContent=filtradas.reduce((s,e)=>s+e.lineas.length,0);
   document.getElementById('k-i').textContent='€'+Math.round(filtradas.reduce((s,e)=>s+calcTot(e),0));
   document.getElementById('k-o').textContent=filtradas.filter(e=>e.origenOcr).length;
-
   const list=document.getElementById('entries');
   if(!filtradas.length){
     list.innerHTML=`<div class="empty"><div class="empty-ico">${entries.length===0?'📋':'🏪'}</div><div class="empty-txt">${entries.length===0?'Sin entradas todavía.<br>Escanea un albarán o añade manualmente.':'Sin entradas para este filtro.'}</div></div>`;
     return;
   }
-  // Construir HTML con índices al array GLOBAL entries
   let html='';
   filtradas.forEach(e=>{
     const i=entries.indexOf(e);
@@ -667,13 +643,24 @@ function renderEntries(){
   list.innerHTML=html;
 }
 
-function borrarEntrada(i){
+async function borrarEntrada(i){
   if(!confirm('¿Eliminar esta entrada?'))return;
-  entries.splice(i,1);guardarLocal();renderEntries();toast('Entrada eliminada','ok');
+  const e=entries[i];
+  await borrarEnSupabase(e._id);
+  entries.splice(i,1);
+  guardarLocal();renderEntries();
+  setSyncStatus('ok','Eliminado ✓');
+  toast('Entrada eliminada','ok');
 }
-function borrarTodo(){
-  if(!confirm('¿Borrar TODOS los registros? No se puede deshacer.'))return;
-  entries=[];guardarLocal();renderEntries();toast('Datos borrados','ok');
+
+async function borrarTodo(){
+  if(!confirm('¿Borrar TODOS los registros de ambas tiendas? No se puede deshacer.'))return;
+  try{
+    await sbFetch('albaranes?id=neq.00000000-0000-0000-0000-000000000000',{method:'DELETE'});
+    entries=[];guardarLocal();renderEntries();
+    setSyncStatus('ok','Tabla vacía');
+    toast('Todos los datos borrados','ok');
+  }catch(e){toast('❌ Error al borrar','err');}
 }
 
 // ═══════════════════ EDICIÓN ═════════════════
@@ -691,30 +678,27 @@ function abrirEd(i){
   document.getElementById('modal-ed').classList.add('open');
   document.body.style.overflow='hidden';
 }
-function cerrarEd(){
-  document.getElementById('modal-ed').classList.remove('open');
-  document.body.style.overflow='';
-  editIdx=-1;edL=[];
-}
+function cerrarEd(){document.getElementById('modal-ed').classList.remove('open');document.body.style.overflow='';editIdx=-1;edL=[];}
 function addLineaEd(){edL.push({articulo:'',referencia:'',cantidad:'',unidad:'ud',precio:'',iva:10,lote:'',caducidad:''});renderTbl('ed-tb',edL,'edL','ed-tot');}
-function guardarEd(){
+
+async function guardarEd(){
   const alb=document.getElementById('ed-alb').value.trim(),prov=document.getElementById('ed-prov').value.trim();
   if(!alb||!prov){toast('Albarán y proveedor obligatorios','err');return;}
   const ok=edL.filter(l=>(l.articulo||'').trim());
   if(!ok.length){toast('Añade al menos un artículo','err');return;}
   entries[editIdx]={...entries[editIdx],tienda:document.getElementById('ed-tienda').value,albaran:alb,proveedor:prov,fecha:document.getElementById('ed-fecha').value||hoy(),cif:document.getElementById('ed-cif').value.trim(),obs:document.getElementById('ed-obs').value.trim(),lineas:ok};
-  guardarLocal();renderEntries();cerrarEd();toast('✅ Entrada actualizada','ok');
+  await actualizarEnSupabase(entries[editIdx]);
+  guardarLocal();renderEntries();cerrarEd();
+  toast('✅ Entrada actualizada y sincronizada','ok');
 }
 
 // ═══════════════════ TABLE RENDERER ══════════
 const UDS=['kg','g','L','ml','ud','cajas','sacos'];
-
-function renderTbl(tbodyId, arr, arrName, totId){
+function renderTbl(tbodyId,arr,arrName,totId){
   const tbody=document.getElementById(tbodyId);
   if(!tbody)return;
-  if(!arr.length){
-    tbody.innerHTML=`<tr><td colspan="10" style="color:var(--text3);text-align:center;padding:14px;font-size:11px;">Pulsa "+ Línea" para añadir</td></tr>`;
-  } else {
+  if(!arr.length){tbody.innerHTML=`<tr><td colspan="10" style="color:var(--text3);text-align:center;padding:14px;font-size:11px;">Pulsa "+ Línea" para añadir</td></tr>`;
+  }else{
     tbody.innerHTML=arr.map((l,i)=>{
       const tot=(+l.cantidad||0)*(+l.precio||0)*(1+(+l.iva||0)/100);
       const uOpts=UDS.map(u=>`<option${(l.unidad||'ud')===u?' selected':''}>${u}</option>`).join('');
@@ -732,30 +716,21 @@ function renderTbl(tbodyId, arr, arrName, totId){
       </tr>`;
     }).join('');
   }
-  calcAndSetTot(arrName, totId);
+  calcAndSetTot(arrName,totId);
 }
-
-function getArr(name){return name==='ocrL'?ocrL:name==='manL'?manL:edL;}
-
-function updTot(tbodyId, arrName, totId, i, tr){
+function getArr(n){return n==='ocrL'?ocrL:n==='manL'?manL:edL;}
+function updTot(tbodyId,arrName,totId,i,tr){
   const arr=getArr(arrName);
   const tot=(+arr[i].cantidad||0)*(+arr[i].precio||0)*(1+(+arr[i].iva||0)/100);
-  const tc=tr.querySelector('.tc');
-  if(tc)tc.textContent='€'+tot.toFixed(2);
-  calcAndSetTot(arrName, totId);
+  const tc=tr.querySelector('.tc');if(tc)tc.textContent='€'+tot.toFixed(2);
+  calcAndSetTot(arrName,totId);
 }
-
-function calcAndSetTot(arrName, totId){
+function calcAndSetTot(arrName,totId){
   const arr=getArr(arrName);
   const tot=arr.reduce((s,l)=>s+(+l.cantidad||0)*(+l.precio||0)*(1+(+l.iva||0)/100),0);
-  const el=document.getElementById(totId);
-  if(el)el.textContent='€'+tot.toFixed(2);
+  const el=document.getElementById(totId);if(el)el.textContent='€'+tot.toFixed(2);
 }
-
-function delLinea(tbodyId, arrName, totId, i){
-  getArr(arrName).splice(i,1);
-  renderTbl(tbodyId,getArr(arrName),arrName,totId);
-}
+function delLinea(tbodyId,arrName,totId,i){getArr(arrName).splice(i,1);renderTbl(tbodyId,getArr(arrName),arrName,totId);}
 
 // ═══════════════════ EXCEL ═══════════════════
 function exportarExcel(){
@@ -781,30 +756,12 @@ function exportarExcel(){
   Object.entries(pm).sort((a,b)=>b[1].t-a[1].t).forEach(([p,d])=>pr.push([p,[...d.ts].join(' / '),d.n,+d.t.toFixed(2),d.u]));
   const wsp=XLSX.utils.aoa_to_sheet(pr);wsp['!cols']=[{wch:24},{wch:16},{wch:10},{wch:14},{wch:12}];XLSX.utils.book_append_sheet(wb,wsp,'Proveedores');
   XLSX.writeFile(wb,`entradas_${new Date().toISOString().split('T')[0]}.xlsx`);
-  toast(`✅ Excel exportado — ${entries.length} entradas`,'ok');
+  toast(`✅ Excel exportado — ${entries.length} entradas de ambas tiendas`,'ok');
 }
-
-// ═══════════════════ STORAGE ═════════════════
-function guardarLocal(){try{localStorage.setItem(STORE,JSON.stringify(entries));}catch(e){}}
-function cargarLocal(){try{const s=localStorage.getItem(STORE);if(s)entries=JSON.parse(s);}catch(e){entries=[];}}
 
 // ═══════════════════ HELPERS ═════════════════
 function x(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-function toast(msg,type='ok'){const t=document.getElementById('toast');t.textContent=msg;t.className='toast '+type;t.style.display='block';clearTimeout(t._t);t._t=setTimeout(()=>t.style.display='none',3000);}
-</script>
-
-<script>
-// SERVICE WORKER INLINE
-if('serviceWorker' in navigator){
-  const c=`const CA='ev3';self.addEventListener('install',e=>{e.waitUntil(self.skipWaiting());});self.addEventListener('activate',e=>{e.waitUntil(self.clients.claim());});self.addEventListener('fetch',e=>{if(e.request.url.includes('api.anthropic.com'))return;e.respondWith(caches.match(e.request).then(c=>{if(c)return c;return fetch(e.request).then(r=>{if(r.ok&&e.request.method==='GET'){const cl=r.clone();caches.open(CA).then(ca=>ca.put(e.request,cl));}return r;}).catch(()=>c);}));});`;
-  navigator.serviceWorker.register(URL.createObjectURL(new Blob([c],{type:'application/javascript'}))).catch(()=>{});
-}
-// INSTALL PROMPT
-let _p=null;
-window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();_p=e;setTimeout(()=>{if(!window.matchMedia('(display-mode: standalone)').matches)document.getElementById('pwa-bar').style.display='block';},4000);});
-function installPwa(){if(!_p)return;_p.prompt();_p.userChoice.then(()=>{document.getElementById('pwa-bar').style.display='none';_p=null;});}
-const isIos=/iphone|ipad|ipod/i.test(navigator.userAgent),isSA=window.matchMedia('(display-mode: standalone)').matches||navigator.standalone;
-if(isIos&&!isSA&&!localStorage.getItem('ios-shown')){setTimeout(()=>{document.getElementById('ios-hint').style.display='block';localStorage.setItem('ios-shown','1');},4000);}
+function toast(msg,type='ok'){const t=document.getElementById('toast');t.textContent=msg;t.className='toast '+type;t.style.display='block';clearTimeout(t._t);t._t=setTimeout(()=>t.style.display='none',3200);}
 </script>
 </body>
 </html>
