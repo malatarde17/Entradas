@@ -1,0 +1,1460 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#080810">
+<title>Trazabilidad · Castros & Carral</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+<style>
+:root{
+  --bg:#080810; --s1:#0e0e1a; --s2:#14141f; --s3:#1c1c2a; --s4:#252535;
+  --border:#2a2a3e; --border2:#3a3a52;
+  --gold:#f5a623; --gold2:#e8950f; --emerald:#00c896; --ruby:#ff4757;
+  --violet:#7c6aff; --sky:#38bdf8;
+  --text:#eeedf8; --text2:#8b8aa8; --text3:#4a4a66;
+  --sat:env(safe-area-inset-top); --sab:env(safe-area-inset-bottom);
+  --font:'Syne',sans-serif; --mono:'DM Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;}
+body{display:flex;flex-direction:column;min-height:100dvh;}
+
+/* ── NOISE TEXTURE ── */
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:0;opacity:.4;}
+
+/* ── HEADER ── */
+.hdr{
+  display:flex;align-items:center;gap:12px;
+  background:rgba(8,8,16,0.92);
+  border-bottom:1px solid var(--border);
+  padding:calc(var(--sat) + 10px) 16px 10px;
+  position:sticky;top:0;z-index:100;
+  backdrop-filter:blur(20px);
+}
+.hdr-logo{
+  display:flex;align-items:center;gap:10px;flex:1;min-width:0;
+}
+.logo-mark{
+  width:38px;height:38px;border-radius:10px;flex-shrink:0;
+  background:linear-gradient(135deg,var(--gold),var(--gold2));
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;box-shadow:0 0 20px rgba(245,166,35,.2);
+}
+.logo-txt strong{display:block;font-size:15px;font-weight:800;letter-spacing:-.5px;}
+.logo-txt small{font-size:10px;color:var(--text3);font-family:var(--mono);}
+.sync-pill{
+  display:flex;align-items:center;gap:5px;
+  background:var(--s2);border:1px solid var(--border);
+  border-radius:20px;padding:4px 10px;font-size:10px;
+  font-family:var(--mono);color:var(--text2);
+}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:var(--text3);transition:.3s;}
+.sync-dot.ok{background:var(--emerald);box-shadow:0 0 6px var(--emerald);}
+.sync-dot.err{background:var(--ruby);}
+.sync-dot.busy{background:var(--gold);animation:blink 1s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* ── NAV ── */
+.nav{
+  display:flex;overflow-x:auto;gap:2px;
+  background:var(--s1);border-bottom:1px solid var(--border);
+  padding:0 16px;scrollbar-width:none;
+}
+.nav::-webkit-scrollbar{display:none;}
+.nav-btn{
+  padding:12px 16px;font-family:var(--font);font-weight:600;font-size:11px;
+  letter-spacing:.5px;text-transform:uppercase;
+  color:var(--text3);background:transparent;border:none;
+  border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;
+  transition:.18s;
+}
+.nav-btn:hover{color:var(--text2);}
+.nav-btn.on{color:var(--gold);border-bottom-color:var(--gold);}
+
+/* ── LAYOUT ── */
+.page{display:none;padding:18px;max-width:1200px;margin:0 auto;width:100%;}
+.page.on{display:block;}
+
+/* ── SECTION LABEL ── */
+.sec{
+  font-size:9px;font-weight:700;letter-spacing:3px;text-transform:uppercase;
+  color:var(--text3);margin:20px 0 10px;
+  display:flex;align-items:center;gap:10px;
+}
+.sec:first-child{margin-top:0;}
+.sec::after{content:'';flex:1;height:1px;background:var(--border);}
+
+/* ── CARD ── */
+.card{
+  background:var(--s1);border:1px solid var(--border);border-radius:14px;
+  padding:16px;margin-bottom:12px;
+}
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:12px;margin-bottom:12px;}
+
+/* ── KPI ROW ── */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px;}
+.kpi{
+  background:var(--s1);border:1px solid var(--border);border-radius:14px;
+  padding:14px 12px;text-align:center;position:relative;overflow:hidden;
+}
+.kpi::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(245,166,35,.04),transparent);pointer-events:none;}
+.kpi-v{font-family:var(--mono);font-size:22px;font-weight:500;color:var(--gold);line-height:1;margin-bottom:5px;}
+.kpi-l{font-size:8px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);}
+.kpi.emerald .kpi-v{color:var(--emerald);}
+.kpi.ruby .kpi-v{color:var(--ruby);}
+.kpi.violet .kpi-v{color:var(--violet);}
+
+/* ── ALERT BADGES ── */
+.alert-strip{display:flex;flex-direction:column;gap:8px;margin-bottom:16px;}
+.alert-item{
+  display:flex;align-items:center;gap:10px;
+  background:rgba(255,71,87,.06);border:1px solid rgba(255,71,87,.2);
+  border-radius:10px;padding:10px 14px;font-size:12px;
+}
+.alert-item.warn{background:rgba(245,166,35,.06);border-color:rgba(245,166,35,.2);}
+.alert-ico{font-size:18px;flex-shrink:0;}
+.alert-txt{flex:1;}
+.alert-lote{font-family:var(--mono);font-size:10px;color:var(--text2);}
+
+/* ── FORM ── */
+.fg{margin-bottom:12px;}
+.fg label{display:block;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:6px;}
+.fg input,.fg select,.fg textarea{
+  width:100%;background:var(--s2);border:1px solid var(--border);
+  border-radius:10px;color:var(--text);padding:10px 13px;
+  font-family:var(--font);font-size:13px;transition:.15s;min-height:42px;
+}
+.fg textarea{min-height:80px;resize:vertical;font-size:12px;}
+.fg input:focus,.fg select:focus,.fg textarea:focus{outline:none;border-color:var(--gold);}
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+
+/* ── BUTTONS ── */
+.btn{
+  padding:10px 16px;border-radius:10px;border:1px solid var(--border);
+  background:var(--s2);color:var(--text);font-family:var(--font);
+  font-weight:600;font-size:12px;cursor:pointer;transition:.15s;
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:40px;
+}
+.btn:hover{border-color:var(--border2);background:var(--s3);}
+.btn-gold{background:var(--gold);color:#000;border-color:var(--gold);}
+.btn-gold:hover{background:var(--gold2);border-color:var(--gold2);}
+.btn-emerald{background:var(--emerald);color:#000;border-color:var(--emerald);}
+.btn-emerald:hover{filter:brightness(1.1);}
+.btn-ruby{color:var(--ruby);border-color:rgba(255,71,87,.3);background:rgba(255,71,87,.06);}
+.btn-ruby:hover{background:rgba(255,71,87,.12);}
+.btn-violet{background:var(--violet);color:#fff;border-color:var(--violet);}
+.btn-sm{padding:5px 11px;font-size:11px;min-height:30px;border-radius:7px;}
+.btn-fw{width:100%;}
+
+/* ── LOTE CARDS ── */
+.lote-card{
+  background:var(--s1);border:1px solid var(--border);border-radius:14px;
+  padding:14px;transition:.15s;
+}
+.lote-card:hover{border-color:var(--border2);}
+.lote-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;gap:8px;}
+.lote-num{font-family:var(--mono);font-size:13px;font-weight:500;color:var(--gold);}
+.lote-name{font-size:14px;font-weight:700;margin-bottom:3px;}
+.lote-meta{font-size:11px;color:var(--text2);line-height:1.5;}
+.lote-footer{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;}
+.pill{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:3px 9px;border-radius:20px;font-size:9px;font-weight:700;letter-spacing:.3px;
+}
+.pill-gold{background:rgba(245,166,35,.12);color:var(--gold);border:1px solid rgba(245,166,35,.3);}
+.pill-emerald{background:rgba(0,200,150,.12);color:var(--emerald);border:1px solid rgba(0,200,150,.3);}
+.pill-ruby{background:rgba(255,71,87,.12);color:var(--ruby);border:1px solid rgba(255,71,87,.3);}
+.pill-violet{background:rgba(124,106,255,.12);color:var(--violet);border:1px solid rgba(124,106,255,.3);}
+.pill-gray{background:var(--s3);color:var(--text2);border:1px solid var(--border);}
+
+/* estado caducidad */
+.cad-ok{color:var(--emerald);}
+.cad-warn{color:var(--gold);}
+.cad-exp{color:var(--ruby);}
+
+/* ── PRODUCTOS LIST ── */
+.prod-card{
+  background:var(--s1);border:1px solid var(--border);border-radius:14px;
+  padding:14px;display:flex;align-items:center;gap:12px;
+}
+.prod-ico{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;}
+.prod-ico.carniceria{background:rgba(255,71,87,.1);}
+.prod-ico.cocina{background:rgba(0,200,150,.1);}
+.prod-info{flex:1;min-width:0;}
+.prod-name{font-size:13px;font-weight:700;margin-bottom:3px;}
+.prod-meta{font-size:11px;color:var(--text2);}
+.prod-actions{display:flex;gap:6px;flex-shrink:0;}
+
+/* ── DISTRIBUCIÓN ── */
+.dist-card{
+  background:var(--s1);border:1px solid var(--border);border-radius:14px;
+  padding:14px;display:flex;align-items:center;gap:12px;
+}
+.dist-arrow{font-size:20px;}
+.dist-info{flex:1;min-width:0;}
+
+/* ── ETIQUETA ── */
+.etiqueta-preview{
+  background:#fff;color:#000;border-radius:10px;
+  padding:14px;font-family:var(--mono);
+  box-shadow:0 4px 24px rgba(0,0,0,.4);
+  max-width:340px;margin:0 auto;
+}
+.et-nombre{font-family:var(--font);font-size:16px;font-weight:800;margin-bottom:4px;text-align:center;}
+.et-empresa{font-size:10px;text-align:center;color:#666;margin-bottom:10px;letter-spacing:1px;}
+.et-row{display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-bottom:1px solid #eee;}
+.et-row:last-of-type{border-bottom:none;}
+.et-key{color:#666;font-weight:500;}
+.et-val{font-weight:700;text-align:right;max-width:60%;}
+.et-ingredientes{font-size:10px;color:#444;margin-top:8px;padding-top:8px;border-top:1px solid #eee;line-height:1.5;}
+.et-alergenos{font-size:10px;color:#c00;font-weight:700;margin-top:6px;}
+.et-barcode{text-align:center;margin-top:10px;}
+.et-barcode svg{max-width:100%;}
+
+/* ── MODAL ── */
+.modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:1000;overflow-y:auto;padding:16px;padding-bottom:calc(16px + var(--sab));backdrop-filter:blur(8px);}
+.modal.open{display:block;}
+.modal-box{max-width:640px;margin:0 auto;background:var(--s1);border:1px solid var(--border2);border-radius:18px;padding:22px;box-shadow:0 24px 64px rgba(0,0,0,.7);}
+.modal-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;}
+.modal-title{font-size:16px;font-weight:800;}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;}
+
+/* ── EMPTY ── */
+.empty{text-align:center;padding:48px 20px;color:var(--text3);}
+.empty-ico{font-size:40px;margin-bottom:12px;opacity:.25;}
+.empty-txt{font-size:12px;line-height:1.7;}
+
+/* ── TOAST ── */
+.toast{position:fixed;bottom:calc(20px + var(--sab));left:50%;transform:translateX(-50%);background:var(--s2);border:1px solid var(--border2);border-radius:12px;padding:11px 22px;font-size:12px;font-weight:600;z-index:2000;display:none;box-shadow:0 6px 28px rgba(0,0,0,.6);white-space:nowrap;max-width:90vw;font-family:var(--mono);}
+.toast.ok{border-color:var(--emerald);color:var(--emerald);}
+.toast.err{border-color:var(--ruby);color:var(--ruby);}
+.toast.info{border-color:var(--gold);color:var(--gold);}
+
+/* ── SEARCH ── */
+.search-row{display:flex;gap:8px;margin-bottom:14px;}
+.search-row input{flex:1;background:var(--s2);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:9px 13px;font-family:var(--font);font-size:13px;min-height:40px;}
+.search-row input:focus{outline:none;border-color:var(--gold);}
+
+/* INGREDIENT SEARCH */
+.ing-drop-item{padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);font-size:12px;transition:.12s;}
+.ing-drop-item:hover{background:var(--s3);}
+.ing-drop-item:last-child{border-bottom:none;}
+.ing-drop-name{font-weight:600;margin-bottom:2px;}
+.ing-drop-lote{font-family:var(--mono);font-size:10px;color:var(--gold);}
+.ing-drop-meta{font-size:10px;color:var(--text3);}
+.ing-drop-group{padding:6px 14px;font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);background:var(--s3);border-bottom:1px solid var(--border);}
+
+/* SELECTED INGREDIENT CHIPS */
+.ing-chip{
+  background:var(--s2);border:1px solid var(--border);border-radius:10px;
+  padding:10px 12px;display:flex;align-items:center;gap:10px;
+}
+.ing-chip-info{flex:1;min-width:0;}
+.ing-chip-name{font-size:12px;font-weight:700;margin-bottom:2px;}
+.ing-chip-lote{font-family:var(--mono);font-size:10px;color:var(--gold);}
+.ing-chip-qty{display:flex;align-items:center;gap:6px;flex-shrink:0;}
+.ing-chip-qty input{width:70px;background:var(--s3);border:1px solid var(--border2);border-radius:7px;color:var(--text);padding:5px 8px;font-family:var(--mono);font-size:12px;text-align:right;}
+.ing-chip-qty span{font-size:11px;color:var(--text3);}
+.ing-chip-del{background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;padding:2px 6px;border-radius:5px;}
+.ing-chip-del:hover{color:var(--ruby);}
+
+/* ETIQUETA CHECKBOXES */
+.et-chk{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text2);cursor:pointer;padding:5px 8px;border:1px solid var(--border);border-radius:8px;transition:.15s;}
+.et-chk:hover{border-color:var(--border2);color:var(--text);}
+.et-chk input{accent-color:var(--gold);width:14px;height:14px;cursor:pointer;}
+/* NUTRICIONAL TABLE */
+.nut-table{width:100%;border-collapse:collapse;font-size:10px;margin-top:6px;}
+.nut-table th{background:#f5f5f5;padding:3px 6px;text-align:left;font-weight:700;border:1px solid #ddd;}
+.nut-table td{padding:3px 6px;border:1px solid #ddd;}
+.nut-table td:last-child{text-align:right;font-weight:600;}
+.nut-sub{padding-left:14px!important;color:#555;}
+
+@media(max-width:768px){
+  .kpi-row{grid-template-columns:repeat(2,1fr);}
+  .g2,.g3{grid-template-columns:1fr;}
+  .card-grid{grid-template-columns:1fr;}
+}
+@media print{
+  .no-print{display:none!important;}
+  body{background:#fff;color:#000;}
+  .etiqueta-preview{box-shadow:none;border:1px solid #ccc;}
+}
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+input[type=date]::-webkit-calendar-picker-indicator{filter:invert(.5);}
+select option{background:var(--s2);}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="hdr no-print">
+  <div class="hdr-logo">
+    <div class="logo-mark">🥩</div>
+    <div class="logo-txt">
+      <strong>Trazabilidad</strong>
+      <small id="sync-txt">Conectando…</small>
+    </div>
+  </div>
+  <div class="sync-pill">
+    <span class="sync-dot" id="sync-dot"></span>
+    <span id="sync-mini">—</span>
+  </div>
+</header>
+
+<!-- NAV -->
+<nav class="nav no-print">
+  <button class="nav-btn on" onclick="ir('dashboard')">📊 Panel</button>
+  <button class="nav-btn" onclick="ir('lotes')">🏷 Lotes</button>
+  <button class="nav-btn" onclick="ir('produccion')">⚙️ Producción</button>
+  <button class="nav-btn" onclick="ir('distribucion')">🚚 Distribución</button>
+  <button class="nav-btn" onclick="ir('etiquetas')">🖨 Etiquetas</button>
+  <button class="nav-btn" onclick="ir('productos')">📋 Catálogo</button>
+  <button class="nav-btn" onclick="cargarDatosMuestra()" style="color:var(--violet);margin-left:auto;">🧪 Datos muestra</button>
+</nav>
+
+<!-- ══════════════════ DASHBOARD ══════════════════ -->
+<div class="page on" id="page-dashboard">
+  <div class="kpi-row">
+    <div class="kpi"><div class="kpi-v" id="d-lotes">0</div><div class="kpi-l">Lotes activos</div></div>
+    <div class="kpi emerald"><div class="kpi-v" id="d-ok">0</div><div class="kpi-l">En buen estado</div></div>
+    <div class="kpi ruby"><div class="kpi-v" id="d-exp">0</div><div class="kpi-l">Caducados</div></div>
+    <div class="kpi violet"><div class="kpi-v" id="d-warn">0</div><div class="kpi-l">Próx. caducidad</div></div>
+  </div>
+  <div class="sec">Alertas</div>
+  <div id="alert-strip" class="alert-strip"></div>
+  <div class="sec">Últimos lotes registrados</div>
+  <div id="dash-lotes"></div>
+</div>
+
+<!-- ══════════════════ LOTES ══════════════════ -->
+<div class="page" id="page-lotes">
+  <div class="search-row">
+    <input type="text" id="lotes-search" placeholder="Buscar por producto, lote, proveedor…" oninput="filtrarLotes()">
+    <button class="btn" onclick="setFiltroCategoria('')">Todos</button>
+    <button class="btn" onclick="setFiltroCategoria('carniceria')">🥩 Carnicería</button>
+    <button class="btn" onclick="setFiltroCategoria('cocina')">🍳 Cocina</button>
+  </div>
+  <div id="lotes-list"></div>
+</div>
+
+<!-- ══════════════════ PRODUCCIÓN ══════════════════ -->
+<div class="page" id="page-produccion">
+  <div class="g2" style="align-items:start;">
+
+    <!-- COLUMNA IZQ: datos del elaborado -->
+    <div>
+      <div class="sec">Datos del elaborado</div>
+      <div class="card">
+        <div class="g2">
+          <div class="fg">
+            <label>Origen</label>
+            <select id="p-origen" onchange="actualizarProductos()">
+              <option value="carniceria">🥩 Carnicería</option>
+              <option value="cocina">🍳 Cocina Central</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label>Producto *</label>
+            <select id="p-producto" onchange="seleccionarProducto()">
+              <option value="">— Selecciona producto —</option>
+            </select>
+          </div>
+          <div class="fg">
+            <label>Nº de Lote *</label>
+            <input type="text" id="p-lote" readonly style="font-family:var(--mono);color:var(--gold);">
+          </div>
+          <div class="fg">
+            <label>Fecha elaboración *</label>
+            <input type="date" id="p-fecha-elab" onchange="calcularCaducidad()">
+          </div>
+          <div class="fg">
+            <label>Días de vida útil</label>
+            <input type="number" id="p-vida" value="3" min="1" oninput="calcularCaducidad()">
+          </div>
+          <div class="fg">
+            <label>Fecha caducidad *</label>
+            <input type="date" id="p-fecha-cad">
+          </div>
+          <div class="fg">
+            <label>Cantidad total *</label>
+            <input type="number" id="p-cantidad" placeholder="0.00" step="0.01">
+          </div>
+          <div class="fg">
+            <label>Unidad</label>
+            <select id="p-unidad">
+              <option>kg</option><option>g</option><option>ud</option>
+              <option>bandejas</option><option>raciones</option><option>L</option>
+            </select>
+          </div>
+        </div>
+        <div class="fg">
+          <label>Alérgenos</label>
+          <input type="text" id="p-alergenos" placeholder="Ej: Gluten, Lácteos, Huevo…">
+        </div>
+        <div class="fg">
+          <label>Notas</label>
+          <input type="text" id="p-notas" placeholder="Observaciones opcionales">
+        </div>
+      </div>
+    </div>
+
+    <!-- COLUMNA DER: trazabilidad de ingredientes -->
+    <div>
+      <div class="sec">Ingredientes utilizados <small style="font-size:9px;color:var(--text3);letter-spacing:0;text-transform:none;">— selecciona lotes de origen</small></div>
+      <div class="card" style="margin-bottom:10px;">
+        <!-- Buscador de ingrediente -->
+        <div style="display:flex;gap:8px;margin-bottom:10px;">
+          <div style="flex:1;position:relative;">
+            <input type="text" id="ing-search" placeholder="Buscar ingrediente (ej: Lomo, Cebolla…)"
+              oninput="buscarIngrediente()" autocomplete="off"
+              style="width:100%;background:var(--s2);border:1px solid var(--border);border-radius:10px;color:var(--text);padding:10px 13px;font-family:var(--font);font-size:13px;min-height:42px;">
+            <div id="ing-dropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--s2);border:1px solid var(--border2);border-radius:10px;z-index:200;max-height:220px;overflow-y:auto;box-shadow:0 8px 24px rgba(0,0,0,.5);margin-top:4px;"></div>
+          </div>
+        </div>
+        <!-- Lista de lotes seleccionados como ingredientes -->
+        <div id="ing-seleccionados" style="display:flex;flex-direction:column;gap:6px;"></div>
+        <div id="ing-empty" style="color:var(--text3);font-size:12px;padding:8px 0;text-align:center;">
+          Busca un ingrediente arriba para añadir su lote de origen
+        </div>
+      </div>
+      <!-- Resumen trazabilidad -->
+      <div class="card" style="background:rgba(245,166,35,.04);border-color:rgba(245,166,35,.2);">
+        <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--text3);margin-bottom:8px;">Trazabilidad registrada</div>
+        <div id="traz-resumen" style="font-size:11px;color:var(--text2);line-height:1.7;">—</div>
+      </div>
+      <button class="btn btn-gold btn-fw" style="margin-top:10px;" onclick="registrarLote()">✓ &nbsp;Registrar lote de producción</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════ DISTRIBUCIÓN ══════════════════ -->
+<div class="page" id="page-distribucion">
+  <div class="sec">Enviar lote a tienda</div>
+  <div class="card">
+    <div class="g2">
+      <div class="fg">
+        <label>Lote a distribuir *</label>
+        <select id="dist-lote">
+          <option value="">— Selecciona lote —</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label>Tienda destino *</label>
+        <select id="dist-tienda">
+          <option value="Castros">Castros</option>
+          <option value="Carral">Carral</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label>Cantidad *</label>
+        <input type="number" id="dist-cantidad" placeholder="0.00" step="0.01">
+      </div>
+      <div class="fg">
+        <label>Fecha envío *</label>
+        <input type="date" id="dist-fecha">
+      </div>
+    </div>
+    <div class="fg">
+      <label>Notas</label>
+      <input type="text" id="dist-notas" placeholder="Opcional">
+    </div>
+    <button class="btn btn-emerald btn-fw" onclick="registrarDistribucion()">🚚 &nbsp;Registrar distribución</button>
+  </div>
+
+  <div class="sec">Historial de distribuciones</div>
+  <div id="dist-list"></div>
+</div>
+
+<!-- ══════════════════ ETIQUETAS ══════════════════ -->
+<div class="page" id="page-etiquetas">
+  <div class="g2" style="align-items:start;">
+    <div>
+      <div class="sec">Lote y datos</div>
+      <div class="fg">
+        <label>Lote</label>
+        <select id="et-lote" onchange="previewEtiqueta()">
+          <option value="">— Selecciona lote —</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label>Peso / Cantidad</label>
+        <input type="text" id="et-peso" placeholder="Ej: 500g" oninput="previewEtiqueta()">
+      </div>
+
+      <div class="sec">Medidas de etiqueta (mm)</div>
+      <div class="g2">
+        <div class="fg"><label>Ancho</label><input type="number" id="et-w" value="60" min="20" max="200" oninput="previewEtiqueta()"></div>
+        <div class="fg"><label>Alto</label><input type="number" id="et-h" value="40" min="15" max="200" oninput="previewEtiqueta()"></div>
+      </div>
+      <div style="display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap;">
+        <button class="btn btn-sm" onclick="setSize(60,40)">60×40</button>
+        <button class="btn btn-sm" onclick="setSize(100,50)">100×50</button>
+        <button class="btn btn-sm" onclick="setSize(50,30)">50×30</button>
+        <button class="btn btn-sm" onclick="setSize(80,60)">80×60</button>
+        <button class="btn btn-sm" onclick="setSize(100,150)">100×150</button>
+      </div>
+
+      <div class="sec">Campos a mostrar</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:14px;">
+        <label class="et-chk"><input type="checkbox" id="ec-logo" checked onchange="previewEtiqueta()"> Logo marca</label>
+        <label class="et-chk"><input type="checkbox" id="ec-nombre" checked onchange="previewEtiqueta()"> Nombre producto</label>
+        <label class="et-chk"><input type="checkbox" id="ec-elab" checked onchange="previewEtiqueta()"> Fecha elaboración</label>
+        <label class="et-chk"><input type="checkbox" id="ec-cad" checked onchange="previewEtiqueta()"> Fecha caducidad</label>
+        <label class="et-chk"><input type="checkbox" id="ec-lote" checked onchange="previewEtiqueta()"> Nº de lote</label>
+        <label class="et-chk"><input type="checkbox" id="ec-peso" checked onchange="previewEtiqueta()"> Peso / Cantidad</label>
+        <label class="et-chk"><input type="checkbox" id="ec-ing" checked onchange="previewEtiqueta()"> Ingredientes</label>
+        <label class="et-chk"><input type="checkbox" id="ec-al" checked onchange="previewEtiqueta()"> Alérgenos</label>
+        <label class="et-chk"><input type="checkbox" id="ec-nut" onchange="previewEtiqueta()"> Info nutricional</label>
+        <label class="et-chk"><input type="checkbox" id="ec-bar" checked onchange="previewEtiqueta()"> Código de barras</label>
+      </div>
+
+      <div class="sec" id="sec-nut" style="display:none">Info nutricional <small style="font-size:9px;color:var(--text3)">(por 100g)</small></div>
+      <div id="nut-fields" style="display:none;">
+        <div class="g2">
+          <div class="fg"><label>Valor energético kcal</label><input type="number" id="nut-kcal" placeholder="0" oninput="previewEtiqueta()"></div>
+          <div class="fg"><label>Valor energético kJ</label><input type="number" id="nut-kj" placeholder="0" oninput="previewEtiqueta()"></div>
+          <div class="fg"><label>Grasas (g)</label><input type="number" id="nut-grasas" placeholder="0" step="0.1" oninput="previewEtiqueta()"></div>
+          <div class="fg"><label>— Saturadas (g)</label><input type="number" id="nut-sat" placeholder="0" step="0.1" oninput="previewEtiqueta()"></div>
+          <div class="fg"><label>Hidratos (g)</label><input type="number" id="nut-hc" placeholder="0" step="0.1" oninput="previewEtiqueta()"></div>
+          <div class="fg"><label>— Azúcares (g)</label><input type="number" id="nut-az" placeholder="0" step="0.1" oninput="previewEtiqueta()"></div>
+          <div class="fg"><label>Proteínas (g)</label><input type="number" id="nut-prot" placeholder="0" step="0.1" oninput="previewEtiqueta()"></div>
+          <div class="fg"><label>Sal (g)</label><input type="number" id="nut-sal" placeholder="0" step="0.1" oninput="previewEtiqueta()"></div>
+        </div>
+      </div>
+
+      <div class="sec">Impresión</div>
+      <div class="fg"><label>Cantidad de copias</label>
+        <input type="number" id="et-copias" value="1" min="1" max="100">
+      </div>
+      <button class="btn btn-gold btn-fw" style="margin-bottom:8px;" onclick="imprimirRollo()">🖨 Imprimir en rollo</button>
+      <button class="btn btn-fw" onclick="imprimirA4()">🖨 Imprimir en A4</button>
+    </div>
+    <div>
+      <div class="sec">Vista previa</div>
+      <div id="et-preview"></div>
+    </div>
+  </div>
+</div>
+<!-- ══════════════════ CATÁLOGO PRODUCTOS ══════════════════ -->
+<div class="page" id="page-productos">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+    <div class="sec" style="margin:0;flex:1;">Catálogo de productos</div>
+    <button class="btn btn-gold btn-sm" onclick="abrirModalProducto()">+ Nuevo producto</button>
+  </div>
+  <div id="productos-list"></div>
+</div>
+
+<!-- MODAL PRODUCTO -->
+<div class="modal" id="modal-producto">
+  <div class="modal-box">
+    <div class="modal-hdr">
+      <div class="modal-title" id="modal-prod-title">Nuevo producto</div>
+      <button class="btn btn-sm btn-ruby" onclick="cerrarModalProducto()">✕</button>
+    </div>
+    <input type="hidden" id="mp-id">
+    <div class="g2">
+      <div class="fg"><label>Nombre *</label><input type="text" id="mp-nombre" placeholder="Nombre del producto"></div>
+      <div class="fg">
+        <label>Categoría *</label>
+        <select id="mp-categoria">
+          <option value="carniceria">🥩 Carnicería</option>
+          <option value="cocina">🍳 Cocina</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label>Vida útil (días)</label>
+        <input type="number" id="mp-vida" value="3" min="1">
+      </div>
+      <div class="fg">
+        <label>Unidad habitual</label>
+        <select id="mp-unidad">
+          <option>kg</option><option>g</option><option>ud</option>
+          <option>bandejas</option><option>raciones</option><option>L</option>
+        </select>
+      </div>
+    </div>
+    <div class="fg"><label>Ingredientes base</label><textarea id="mp-ingredientes" placeholder="Ingredientes habituales…"></textarea></div>
+    <div class="fg"><label>Alérgenos</label><input type="text" id="mp-alergenos" placeholder="Gluten, Lácteos, Huevo…"></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="cerrarModalProducto()">Cancelar</button>
+      <button class="btn btn-gold" onclick="guardarProducto()">✓ Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL LOTE DETALLE -->
+<div class="modal" id="modal-lote">
+  <div class="modal-box">
+    <div class="modal-hdr">
+      <div class="modal-title">🏷 Detalle del lote</div>
+      <button class="btn btn-sm btn-ruby" onclick="cerrarModalLote()">✕</button>
+    </div>
+    <div id="modal-lote-content"></div>
+    <div class="modal-actions">
+      <button class="btn btn-ruby" id="btn-retirar" onclick="retirarLote()">⚠️ Retirar lote</button>
+      <button class="btn btn-violet" onclick="irAEtiquetaDesdeModal()">🖨 Generar etiqueta</button>
+      <button class="btn" onclick="cerrarModalLote()">Cerrar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════ SUPABASE ════════════════════════
+const SB_URL='https://hiymglxodchppuubznyx.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhpeW1nbHhvZGNocHB1dWJ6bnl4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE4ODM0MDMsImV4cCI6MjA4NzQ1OTQwM30.BVKo7PkSai-AlW37_wAMJhz4lARjg4H6lfcfuxa9m_U';
+const H={'Content-Type':'application/json','apikey':SB_KEY,'Authorization':'Bearer '+SB_KEY};
+
+async function sb(path,opts={}){
+  const res=await fetch(SB_URL+'/rest/v1/'+path,{headers:H,...opts});
+  if(!res.ok){const e=await res.text();throw new Error(e);}
+  return res.status===204?null:res.json();
+}
+
+// ═══════════════════════════ STATE ═══════════════════════════
+let productos=[], lotes=[], distribuciones=[], albLotes=[];
+let loteEditId=null, loteModalActual=null;
+let filtroCat='', filtroSearch='';
+let ingSeleccionados=[];
+
+// ═══════════════════════════ INIT ════════════════════════════
+window.onload=async()=>{
+  document.getElementById('p-fecha-elab').value=hoy();
+  document.getElementById('dist-fecha').value=hoy();
+  await cargarTodo();
+};
+
+async function cargarTodo(){
+  sync('busy','Cargando…');
+  try{
+    [productos, lotes, distribuciones] = await Promise.all([
+      sb('productos?activo=eq.true&order=nombre.asc'),
+      sb('lotes?order=created_at.desc'),
+      sb('distribuciones?order=created_at.desc&limit=100')
+    ]);
+    // Cargar líneas de albaranes como lotes de ingredientes disponibles
+    const albaranes = await sb('albaranes?order=created_at.desc&limit=500');
+    albLotes = [];
+    albaranes.forEach(alb=>{
+      (alb.lineas||[]).forEach(l=>{
+        if(!l.articulo)return;
+        albLotes.push({
+          tipo:'albaran',
+          id:'alb-'+alb.id+'-'+(l.lote||''),
+          loteNum: l.lote||('ENT-'+alb.albaran),
+          nombre: l.articulo,
+          disponible: +(l.cantidad||0),
+          unidad: l.unidad||'kg',
+          albaran: alb.albaran,
+          proveedor: alb.proveedor,
+          fecha: alb.fecha,
+          tienda: alb.tienda
+        });
+      });
+    });
+    sync('ok',lotes.length+' lotes');
+    renderTodo();
+  }catch(e){
+    sync('err','Sin conexión');
+    toast('❌ Error: '+e.message,'err');
+  }
+}
+
+function renderTodo(){
+  renderDashboard();
+  renderLotes();
+  renderDistribuciones();
+  renderProductos();
+  actualizarSelectores();
+  actualizarProductos();
+}
+
+// ═══════════════════════════ NAV ═════════════════════════════
+function ir(page){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('on'));
+  document.getElementById('page-'+page).classList.add('on');
+  event.target.classList.add('on');
+}
+
+// ═══════════════════════════ SYNC ════════════════════════════
+function sync(state,msg){
+  document.getElementById('sync-dot').className='sync-dot '+state;
+  document.getElementById('sync-txt').textContent=msg;
+  document.getElementById('sync-mini').textContent=msg;
+}
+
+// ═══════════════════════════ DASHBOARD ═══════════════════════
+function renderDashboard(){
+  const hoy_d=new Date(); hoy_d.setHours(0,0,0,0);
+  const en3=new Date(hoy_d); en3.setDate(en3.getDate()+3);
+  const activos=lotes.filter(l=>l.estado==='activo');
+  const caducados=activos.filter(l=>new Date(l.fecha_caducidad)<hoy_d);
+  const proximos=activos.filter(l=>{const d=new Date(l.fecha_caducidad);return d>=hoy_d&&d<=en3;});
+  const ok=activos.filter(l=>new Date(l.fecha_caducidad)>en3);
+
+  document.getElementById('d-lotes').textContent=activos.length;
+  document.getElementById('d-ok').textContent=ok.length;
+  document.getElementById('d-exp').textContent=caducados.length;
+  document.getElementById('d-warn').textContent=proximos.length;
+
+  // Alertas
+  const strip=document.getElementById('alert-strip');
+  let html='';
+  caducados.forEach(l=>{html+=`<div class="alert-item"><div class="alert-ico">🚨</div><div class="alert-txt"><b>${l.producto_nombre}</b> — lote caducado<div class="alert-lote">${l.numero_lote} · Caducó: ${l.fecha_caducidad}</div></div><button class="btn btn-sm btn-ruby" onclick="retirarLoteId('${l.id}')">Retirar</button></div>`;});
+  proximos.forEach(l=>{const dias=Math.ceil((new Date(l.fecha_caducidad)-hoy_d)/86400000);html+=`<div class="alert-item warn"><div class="alert-ico">⚠️</div><div class="alert-txt"><b>${l.producto_nombre}</b> — caduca en ${dias} día(s)<div class="alert-lote">${l.numero_lote} · Caduca: ${l.fecha_caducidad}</div></div></div>`;});
+  strip.innerHTML=html||'<div style="color:var(--text3);font-size:12px;padding:8px 0;">✅ Sin alertas activas</div>';
+
+  // Últimos lotes
+  const ul=lotes.slice(0,5);
+  document.getElementById('dash-lotes').innerHTML=ul.length?ul.map(l=>loteCardHtml(l)).join(''):'<div class="empty"><div class="empty-ico">🏷</div><div class="empty-txt">Sin lotes registrados todavía.</div></div>';
+}
+
+// ═══════════════════════════ LOTES ═══════════════════════════
+function renderLotes(){
+  let lista=lotes;
+  if(filtroCat) lista=lista.filter(l=>l.categoria===filtroCat);
+  if(filtroSearch){
+    const q=filtroSearch.toLowerCase();
+    lista=lista.filter(l=>(l.producto_nombre||'').toLowerCase().includes(q)||(l.numero_lote||'').toLowerCase().includes(q));
+  }
+  document.getElementById('lotes-list').innerHTML=lista.length
+    ?lista.map(l=>loteCardHtml(l)).join('')
+    :'<div class="empty"><div class="empty-ico">🏷</div><div class="empty-txt">Sin lotes para este filtro.</div></div>';
+}
+
+function filtrarLotes(){
+  filtroSearch=document.getElementById('lotes-search').value;
+  renderLotes();
+}
+function setFiltroCategoria(c){filtroCat=c;renderLotes();}
+
+function loteCardHtml(l){
+  const hoy_d=new Date();hoy_d.setHours(0,0,0,0);
+  const cad=new Date(l.fecha_caducidad);
+  const dias=Math.ceil((cad-hoy_d)/86400000);
+  let cadCls='cad-ok',cadTxt=dias+' días';
+  if(dias<0){cadCls='cad-exp';cadTxt='CADUCADO';}
+  else if(dias<=3){cadCls='cad-warn';cadTxt='⚠️ '+dias+' días';}
+  const catPill=l.categoria==='carniceria'?'<span class="pill pill-ruby">🥩 Carnicería</span>':'<span class="pill pill-emerald">🍳 Cocina</span>';
+  const estPill=l.estado==='activo'?'<span class="pill pill-gold">Activo</span>':'<span class="pill pill-gray">'+l.estado+'</span>';
+  return `<div class="lote-card" style="margin-bottom:10px;" onclick="verLote('${l.id}')">
+    <div class="lote-head">
+      <div>
+        <div class="lote-num">${l.numero_lote}</div>
+        <div class="lote-name">${l.producto_nombre||'—'}</div>
+      </div>
+      <div style="text-align:right;">
+        <div class="lote-meta ${cadCls}" style="font-weight:700;">${cadTxt}</div>
+        <div class="lote-meta">${l.cantidad_disponible||l.cantidad_total||'?'} ${l.unidad||''}</div>
+      </div>
+    </div>
+    <div class="lote-meta">Elab: ${l.fecha_elaboracion} · Cad: ${l.fecha_caducidad}</div>
+    <div class="lote-footer">${catPill}${estPill}</div>
+  </div>`;
+}
+
+function verLote(id){
+  const l=lotes.find(x=>x.id===id);
+  if(!l)return;
+  loteModalActual=l;
+  const hoy_d=new Date();hoy_d.setHours(0,0,0,0);
+  const dias=Math.ceil((new Date(l.fecha_caducidad)-hoy_d)/86400000);
+  const dists=distribuciones.filter(d=>d.lote_id===id);
+  let distHtml=dists.length?dists.map(d=>`<div style="display:flex;justify-content:space-between;font-size:11px;padding:4px 0;border-bottom:1px solid var(--border);"><span>📦 ${d.tienda}</span><span>${d.cantidad} ${d.unidad||''}</span><span style="color:var(--text3)">${d.fecha}</span></div>`).join(''):'<div style="color:var(--text3);font-size:11px;">Sin distribuciones registradas</div>';
+  document.getElementById('modal-lote-content').innerHTML=`
+    <div class="g2" style="margin-bottom:14px;">
+      <div><div style="font-size:9px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px;">Lote</div><div style="font-family:var(--mono);font-size:14px;color:var(--gold)">${l.numero_lote}</div></div>
+      <div><div style="font-size:9px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px;">Estado</div><div style="font-weight:700;">${l.estado} · ${dias<0?'<span style="color:var(--ruby)">CADUCADO</span>':dias<=3?'<span style="color:var(--gold)">'+dias+' días</span>':'<span style="color:var(--emerald)">'+dias+' días</span>'}</div></div>
+      <div><div style="font-size:9px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px;">Elaboración</div><div>${l.fecha_elaboracion}</div></div>
+      <div><div style="font-size:9px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px;">Caducidad</div><div>${l.fecha_caducidad}</div></div>
+      <div><div style="font-size:9px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px;">Cantidad total</div><div>${l.cantidad_total} ${l.unidad}</div></div>
+      <div><div style="font-size:9px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:3px;">Disponible</div><div>${l.cantidad_disponible} ${l.unidad}</div></div>
+    </div>
+    ${l.ingredientes?`<div style="font-size:11px;color:var(--text2);margin-bottom:10px;"><b style="color:var(--text);">Ingredientes:</b> ${l.ingredientes}</div>`:''}
+    ${l.alergenos?`<div style="font-size:11px;color:var(--ruby);margin-bottom:10px;"><b>Alérgenos:</b> ${l.alergenos}</div>`:''}
+    <div style="font-size:9px;color:var(--text3);letter-spacing:1px;text-transform:uppercase;margin-bottom:6px;">Distribuciones</div>
+    ${distHtml}
+  `;
+  document.getElementById('modal-lote').classList.add('open');
+}
+function cerrarModalLote(){document.getElementById('modal-lote').classList.remove('open');loteModalActual=null;}
+function irAEtiquetaDesdeModal(){
+  if(!loteModalActual)return;
+  cerrarModalLote();
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('on'));
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
+  document.getElementById('page-etiquetas').classList.add('on');
+  document.querySelectorAll('.nav-btn')[4].classList.add('on');
+  document.getElementById('et-lote').value=loteModalActual.id;
+  previewEtiqueta();
+}
+
+// ═══════════════════════════ PRODUCCIÓN ══════════════════════
+
+function generarNumLote(){
+  const origen=document.getElementById('p-origen').value;
+  const fecha=document.getElementById('p-fecha-elab').value.replace(/-/g,'');
+  const rand=String(Math.floor(Math.random()*999)+1).padStart(3,'0');
+  const pref=origen==='carniceria'?'CAR':'COC';
+  return `${pref}-${fecha}-${rand}`;
+}
+
+function actualizarProductos(){
+  const origen=document.getElementById('p-origen').value;
+  const sel=document.getElementById('p-producto');
+  const filtrados=productos.filter(p=>p.categoria===origen);
+  sel.innerHTML='<option value="">— Selecciona producto —</option>'+filtrados.map(p=>`<option value="${p.id}" data-vida="${p.vida_util_dias}" data-al="${escAttr(p.alergenos||'')}">${p.nombre}</option>`).join('');
+  document.getElementById('p-lote').value=generarNumLote();
+}
+
+function seleccionarProducto(){
+  const sel=document.getElementById('p-producto');
+  const opt=sel.selectedOptions[0];
+  if(!opt||!opt.value)return;
+  document.getElementById('p-vida').value=opt.dataset.vida||3;
+  document.getElementById('p-alergenos').value=opt.dataset.al||'';
+  calcularCaducidad();
+  document.getElementById('p-lote').value=generarNumLote();
+}
+
+function calcularCaducidad(){
+  const fecha=document.getElementById('p-fecha-elab').value;
+  const dias=parseInt(document.getElementById('p-vida').value)||3;
+  if(!fecha)return;
+  const d=new Date(fecha);d.setDate(d.getDate()+dias);
+  document.getElementById('p-fecha-cad').value=d.toISOString().split('T')[0];
+}
+
+// ── BUSCADOR DE INGREDIENTES ──────────────────────────────────
+function buscarIngrediente(){
+  const q=document.getElementById('ing-search').value.toLowerCase().trim();
+  const dd=document.getElementById('ing-dropdown');
+  if(q.length<2){dd.style.display='none';return;}
+
+  // Buscar en lotes activos Y en líneas de albaranes
+  const resultados=[];
+
+  // 1. Lotes de producción activos
+  lotes.filter(l=>l.estado==='activo'&&(l.cantidad_disponible||0)>0)
+    .filter(l=>(l.producto_nombre||'').toLowerCase().includes(q))
+    .forEach(l=>resultados.push({
+      tipo:'lote_produccion',
+      id:l.id, loteNum:l.numero_lote,
+      nombre:l.producto_nombre, categoria:l.categoria,
+      disponible:l.cantidad_disponible, unidad:l.unidad,
+      fecha:l.fecha_elaboracion, cad:l.fecha_caducidad
+    }));
+
+  // 2. Entradas de albarán (Supabase tabla albaranes)
+  albLotes.filter(a=>a.nombre.toLowerCase().includes(q)&&(a.disponible||0)>0)
+    .forEach(a=>resultados.push(a));
+
+  if(!resultados.length){
+    dd.innerHTML='<div class="ing-drop-item" style="color:var(--text3);">Sin resultados para "'+q+'"</div>';
+    dd.style.display='block';return;
+  }
+
+  // Agrupar por tipo
+  let html='';
+  const prods=resultados.filter(r=>r.tipo==='lote_produccion');
+  const albs=resultados.filter(r=>r.tipo==='albaran');
+  if(prods.length){
+    html+='<div class="ing-drop-group">Lotes de producción</div>';
+    html+=prods.map(r=>`<div class="ing-drop-item" onclick="selIngrediente(${JSON.stringify(r).replace(/"/g,'&quot;')})">
+      <div class="ing-drop-name">${r.nombre}</div>
+      <div class="ing-drop-lote">${r.loteNum}</div>
+      <div class="ing-drop-meta">Disponible: ${r.disponible} ${r.unidad||''} · Cad: ${r.cad}</div>
+    </div>`).join('');
+  }
+  if(albs.length){
+    html+='<div class="ing-drop-group">Entradas de albarán</div>';
+    html+=albs.map(r=>`<div class="ing-drop-item" onclick="selIngrediente(${JSON.stringify(r).replace(/"/g,'&quot;')})">
+      <div class="ing-drop-name">${r.nombre}</div>
+      <div class="ing-drop-lote">${r.loteNum}</div>
+      <div class="ing-drop-meta">Albarán: ${r.albaran} · ${r.proveedor} · ${r.fecha} · Disp: ${r.disponible} ${r.unidad||''}</div>
+    </div>`).join('');
+  }
+  dd.innerHTML=html;
+  dd.style.display='block';
+}
+
+function selIngrediente(r){
+  // Evitar duplicados del mismo lote
+  if(ingSeleccionados.find(i=>i.loteNum===r.loteNum)){
+    toast('Este lote ya está añadido','info');
+    return;
+  }
+  ingSeleccionados.push({...r, cantidadUsada:''});
+  document.getElementById('ing-search').value='';
+  document.getElementById('ing-dropdown').style.display='none';
+  renderIngSeleccionados();
+}
+
+function renderIngSeleccionados(){
+  const cont=document.getElementById('ing-seleccionados');
+  const empty=document.getElementById('ing-empty');
+  if(!ingSeleccionados.length){
+    cont.innerHTML=''; empty.style.display='block';
+    document.getElementById('traz-resumen').textContent='—';
+    return;
+  }
+  empty.style.display='none';
+  cont.innerHTML=ingSeleccionados.map((ing,i)=>`
+    <div class="ing-chip">
+      <div class="ing-chip-info">
+        <div class="ing-chip-name">${ing.nombre}</div>
+        <div class="ing-chip-lote">${ing.loteNum}${ing.tipo==='albaran'?' · '+ing.proveedor:''}</div>
+      </div>
+      <div class="ing-chip-qty">
+        <input type="number" placeholder="0" step="0.01" value="${ing.cantidadUsada||''}"
+          oninput="ingSeleccionados[${i}].cantidadUsada=+this.value;actualizarResumen()">
+        <span>${ing.unidad||'kg'}</span>
+      </div>
+      <button class="ing-chip-del" onclick="quitarIngrediente(${i})">✕</button>
+    </div>`).join('');
+  actualizarResumen();
+}
+
+function quitarIngrediente(i){
+  ingSeleccionados.splice(i,1);
+  renderIngSeleccionados();
+}
+
+function actualizarResumen(){
+  if(!ingSeleccionados.length){document.getElementById('traz-resumen').textContent='—';return;}
+  const lineas=ingSeleccionados.map(ing=>`• ${ing.nombre} — Lote: ${ing.loteNum}${ing.cantidadUsada?' ('+ing.cantidadUsada+' '+(ing.unidad||'kg')+')':''}`);
+  document.getElementById('traz-resumen').innerHTML=lineas.join('<br>');
+}
+
+// Cerrar dropdown al hacer clic fuera
+document.addEventListener('click',e=>{
+  if(!e.target.closest('#ing-search')&&!e.target.closest('#ing-dropdown'))
+    document.getElementById('ing-dropdown').style.display='none';
+});
+
+async function registrarLote(){
+  const prodId=document.getElementById('p-producto').value;
+  const prodNombre=document.getElementById('p-producto').selectedOptions[0]?.text||'';
+  const loteNum=document.getElementById('p-lote').value.trim();
+  const fechaElab=document.getElementById('p-fecha-elab').value;
+  const fechaCad=document.getElementById('p-fecha-cad').value;
+  const cantidad=parseFloat(document.getElementById('p-cantidad').value)||0;
+
+  if(!prodId||!loteNum||!fechaElab||!fechaCad||!cantidad){toast('Rellena todos los campos obligatorios','err');return;}
+
+  // Construir trazabilidad como JSON y texto
+  const trazJson=ingSeleccionados.map(ing=>({
+    loteNum:ing.loteNum, nombre:ing.nombre,
+    cantidad:ing.cantidadUsada||0, unidad:ing.unidad||'',
+    tipo:ing.tipo, proveedor:ing.proveedor||''
+  }));
+  const ingTxt=ingSeleccionados.map(ing=>`${ing.nombre} (Lote: ${ing.loteNum}${ing.cantidadUsada?' '+ing.cantidadUsada+' '+(ing.unidad||''):''})${ing.proveedor?' de '+ing.proveedor:''}`).join('; ');
+
+  sync('busy','Guardando…');
+  try{
+    const nuevo=await sb('lotes',{
+      method:'POST',
+      body:JSON.stringify({
+        numero_lote:loteNum,
+        producto_id:prodId,
+        producto_nombre:prodNombre,
+        categoria:document.getElementById('p-origen').value,
+        origen:document.getElementById('p-origen').value,
+        fecha_elaboracion:fechaElab,
+        fecha_caducidad:fechaCad,
+        cantidad_total:cantidad,
+        cantidad_disponible:cantidad,
+        unidad:document.getElementById('p-unidad').value,
+        ingredientes:ingTxt||'',
+        alergenos:document.getElementById('p-alergenos').value.trim(),
+        notas:document.getElementById('p-notas').value.trim(),
+        trazabilidad:trazJson,
+        estado:'activo'
+      }),
+      headers:{...H,'Prefer':'return=representation'}
+    });
+    lotes.unshift(nuevo[0]);
+    sync('ok',lotes.length+' lotes');
+    renderTodo();
+    actualizarSelectores();
+    // Reset
+    document.getElementById('p-producto').value='';
+    document.getElementById('p-cantidad').value='';
+    document.getElementById('p-notas').value='';
+    document.getElementById('p-alergenos').value='';
+    ingSeleccionados=[];
+    renderIngSeleccionados();
+    document.getElementById('p-lote').value=generarNumLote();
+    toast('✅ Lote '+loteNum+' registrado con trazabilidad','ok');
+  }catch(e){sync('err','Error');toast('❌ '+e.message,'err');}
+}
+
+// ═══════════════════════════ DISTRIBUCIÓN ════════════════════
+function actualizarSelectores(){
+  const activos=lotes.filter(l=>l.estado==='activo'&&(l.cantidad_disponible||0)>0);
+  const opts='<option value="">— Selecciona lote —</option>'+activos.map(l=>`<option value="${l.id}">${l.numero_lote} · ${l.producto_nombre} (${l.cantidad_disponible} ${l.unidad})</option>`).join('');
+  document.getElementById('dist-lote').innerHTML=opts;
+  document.getElementById('et-lote').innerHTML='<option value="">— Selecciona lote —</option>'+lotes.map(l=>`<option value="${l.id}">${l.numero_lote} · ${l.producto_nombre}</option>`).join('');
+}
+
+async function registrarDistribucion(){
+  const loteId=document.getElementById('dist-lote').value;
+  const tienda=document.getElementById('dist-tienda').value;
+  const cantidad=parseFloat(document.getElementById('dist-cantidad').value)||0;
+  const fecha=document.getElementById('dist-fecha').value;
+  if(!loteId||!cantidad||!fecha){toast('Rellena todos los campos','err');return;}
+  const lote=lotes.find(l=>l.id===loteId);
+  if(!lote){toast('Lote no encontrado','err');return;}
+  if(cantidad>(lote.cantidad_disponible||0)){toast('Cantidad superior a la disponible ('+lote.cantidad_disponible+' '+lote.unidad+')','err');return;}
+
+  sync('busy','Guardando…');
+  try{
+    const nueva=await sb('distribuciones',{
+      method:'POST',
+      body:JSON.stringify({lote_id:loteId,numero_lote:lote.numero_lote,producto_nombre:lote.producto_nombre,tienda,cantidad,unidad:lote.unidad,fecha,notas:document.getElementById('dist-notas').value.trim()}),
+      headers:{...H,'Prefer':'return=representation'}
+    });
+    // Actualizar cantidad disponible
+    const nueva_disp=(lote.cantidad_disponible||0)-cantidad;
+    await sb('lotes?id=eq.'+loteId,{method:'PATCH',body:JSON.stringify({cantidad_disponible:nueva_disp,estado:nueva_disp<=0?'agotado':'activo'}),headers:{...H,'Prefer':'return=minimal'}});
+    lote.cantidad_disponible=nueva_disp;
+    if(nueva_disp<=0)lote.estado='agotado';
+    distribuciones.unshift(nueva[0]);
+    renderTodo();
+    actualizarSelectores();
+    document.getElementById('dist-cantidad').value='';
+    document.getElementById('dist-notas').value='';
+    sync('ok','Distribuido ✓');
+    toast('✅ Distribuido a '+tienda,'ok');
+  }catch(e){sync('err','Error');toast('❌ '+e.message,'err');}
+}
+
+function renderDistribuciones(){
+  const list=document.getElementById('dist-list');
+  if(!distribuciones.length){list.innerHTML='<div class="empty"><div class="empty-ico">🚚</div><div class="empty-txt">Sin distribuciones registradas.</div></div>';return;}
+  list.innerHTML=distribuciones.slice(0,30).map(d=>`
+    <div class="dist-card" style="margin-bottom:8px;">
+      <div class="dist-arrow">📦</div>
+      <div class="dist-info">
+        <div style="font-weight:700;font-size:13px;">${d.producto_nombre||'—'}</div>
+        <div style="font-size:11px;color:var(--text2);font-family:var(--mono);">${d.numero_lote||''}</div>
+      </div>
+      <div style="text-align:right;">
+        <div style="font-weight:700;color:var(--emerald);">${d.tienda}</div>
+        <div style="font-size:11px;color:var(--text2);">${d.cantidad} ${d.unidad||''} · ${d.fecha}</div>
+      </div>
+    </div>`).join('');
+}
+
+// ═══════════════════════════ ETIQUETAS ═══════════════════════
+// ─── helpers para etiqueta ───────────────────────────────────
+function chk(id){return document.getElementById(id)?.checked;}
+function nutVal(id){return document.getElementById(id)?.value||'0';}
+
+// ── LOGO SVG MARIA FABEIRO (recreado vectorialmente) ─────────
+function getLogoSVG(color='#000', height=22){
+  const w = height * 5.8;
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${height}" viewBox="0 0 580 100">
+    <defs>
+      <style>
+        .mf{font-family:'Arial Black',Arial,sans-serif;font-weight:900;font-size:88px;letter-spacing:6px;fill:${color};}
+      </style>
+    </defs>
+    <!-- M con detalle especial: patas abiertas + arco interior -->
+    <text class="mf" x="0" y="88">MARIA FABEIRO</text>
+    <!-- Detalle M: arco interior -->
+    <path d="M8,20 Q28,55 48,20" stroke="${color}" stroke-width="5" fill="none"/>
+    <!-- O con trazo de cierre especial -->
+  </svg>`;
+}
+
+// Logo más fiel usando texto SVG con fuente condensada bold
+function getLogoHtml(color='#000', fontSize=18){
+  return `<div style="
+    font-family:'Arial Black','Arial Narrow',Arial,sans-serif;
+    font-weight:900;
+    font-size:${fontSize}px;
+    letter-spacing:3px;
+    color:${color};
+    text-transform:uppercase;
+    line-height:1;
+    text-align:center;
+  "><span style="font-size:${Math.round(fontSize*1.15)}px;">M</span>ARIA <span style="font-size:${Math.round(fontSize*1.15)}px;">F</span>ABEIRO</div>`;
+}
+
+function getNutHtml(fs){
+  if(!chk('ec-nut'))return'';
+  const tfs = Math.max(fs*0.72, 6);
+  return`<div style="margin-top:${fs*0.4}px;border-top:1px solid #bbb;padding-top:${fs*0.3}px;">
+    <div style="font-size:${tfs}px;font-weight:700;margin-bottom:${tfs*0.3}px;text-transform:uppercase;letter-spacing:0.5px;">Información nutricional (por 100g)</div>
+    <table style="width:100%;border-collapse:collapse;font-size:${tfs}px;">
+      <tr style="background:#f0f0f0;"><th style="padding:1px 3px;text-align:left;border:1px solid #ccc;font-weight:700;">Nutriente</th><th style="padding:1px 3px;border:1px solid #ccc;text-align:right;">Por 100g</th></tr>
+      <tr><td style="padding:1px 3px;border:1px solid #ccc;">Valor energético</td><td style="padding:1px 3px;border:1px solid #ccc;text-align:right;font-weight:600;">${nutVal('nut-kcal')} kcal / ${nutVal('nut-kj')} kJ</td></tr>
+      <tr><td style="padding:1px 3px;border:1px solid #ccc;">Grasas</td><td style="padding:1px 3px;border:1px solid #ccc;text-align:right;font-weight:600;">${nutVal('nut-grasas')} g</td></tr>
+      <tr><td style="padding:1px 3px;border:1px solid #ccc;padding-left:8px;">— Saturadas</td><td style="padding:1px 3px;border:1px solid #ccc;text-align:right;">${nutVal('nut-sat')} g</td></tr>
+      <tr><td style="padding:1px 3px;border:1px solid #ccc;">Hidratos de carbono</td><td style="padding:1px 3px;border:1px solid #ccc;text-align:right;font-weight:600;">${nutVal('nut-hc')} g</td></tr>
+      <tr><td style="padding:1px 3px;border:1px solid #ccc;padding-left:8px;">— Azúcares</td><td style="padding:1px 3px;border:1px solid #ccc;text-align:right;">${nutVal('nut-az')} g</td></tr>
+      <tr><td style="padding:1px 3px;border:1px solid #ccc;">Proteínas</td><td style="padding:1px 3px;border:1px solid #ccc;text-align:right;font-weight:600;">${nutVal('nut-prot')} g</td></tr>
+      <tr><td style="padding:1px 3px;border:1px solid #ccc;">Sal</td><td style="padding:1px 3px;border:1px solid #ccc;text-align:right;font-weight:600;">${nutVal('nut-sal')} g</td></tr>
+    </table>
+  </div>`;
+}
+
+function setSize(w,h){
+  document.getElementById('et-w').value=w;
+  document.getElementById('et-h').value=h;
+  previewEtiqueta();
+}
+
+// Calcula font-size base según dimensiones de etiqueta
+function calcFS(wMM, hMM){
+  // Escala: 60x40mm ≈ 9px base. Proporción por área.
+  const area = wMM * hMM;
+  const base = Math.sqrt(area / 2400) * 9;
+  return Math.max(Math.min(base, 18), 6);
+}
+
+function buildEtiquetaContent(l, peso, wMM, hMM){
+  const fs = calcFS(wMM, hMM);
+  const logoH = Math.max(Math.round(fs * 1.6), 10);
+  const bId = 'bc-' + Date.now() + '-' + Math.random().toString(36).slice(2);
+  const pad = Math.max(Math.round(wMM * 0.06), 3);
+
+  let inner = '';
+  if(chk('ec-logo')) inner += `<div style="text-align:center;margin-bottom:${fs*0.4}px;padding-bottom:${fs*0.3}px;border-bottom:1.5px solid #000;">${getLogoHtml('#000', logoH)}</div>`;
+  if(chk('ec-nombre')) inner += `<div style="font-size:${Math.round(fs*1.25)}px;font-weight:900;text-align:center;margin-bottom:${fs*0.3}px;letter-spacing:0.5px;line-height:1.1;">${l.producto_nombre||'—'}</div>`;
+  if(chk('ec-elab')) inner += etRow('Elab.', l.fecha_elaboracion, fs);
+  if(chk('ec-cad'))  inner += etRow('Cad.', l.fecha_caducidad, fs, 'color:#c00;font-weight:800;');
+  if(chk('ec-lote')) inner += etRow('Lote', l.numero_lote, fs, 'font-family:monospace;');
+  if(chk('ec-peso')) inner += etRow('Peso', peso, fs);
+  if(chk('ec-ing') && l.ingredientes) inner += `<div style="font-size:${Math.max(fs*0.75,5.5)}px;color:#333;margin-top:${fs*0.3}px;line-height:1.4;"><b>Ingredientes:</b> ${l.ingredientes}</div>`;
+  if(chk('ec-al') && l.alergenos)    inner += `<div style="font-size:${Math.max(fs*0.78,6)}px;color:#c00;font-weight:700;margin-top:${fs*0.25}px;">⚠ Alérgenos: ${l.alergenos}</div>`;
+  inner += getNutHtml(fs);
+  if(chk('ec-bar')) inner += `<div style="text-align:center;margin-top:${fs*0.4}px;"><svg id="${bId}"></svg></div>`;
+
+  const html = `<div id="et-print-area" style="
+    width:${wMM}mm; min-height:${hMM}mm;
+    padding:${pad}px;
+    background:#fff; color:#000;
+    font-family:Arial,sans-serif;
+    font-size:${fs}px;
+    box-sizing:border-box;
+    overflow:hidden;
+    border:1px solid #ddd;
+  ">${inner}</div>`;
+  return {html, bId, fs};
+}
+
+function etRow(key, val, fs, valStyle=''){
+  return `<div style="display:flex;justify-content:space-between;align-items:baseline;font-size:${fs}px;padding:${fs*0.12}px 0;border-bottom:0.5px solid #ddd;">
+    <span style="color:#555;font-size:${fs*0.85}px;">${key}</span>
+    <span style="${valStyle}">${val||'—'}</span>
+  </div>`;
+}
+
+function previewEtiqueta(){
+  const showNut = chk('ec-nut');
+  document.getElementById('nut-fields').style.display = showNut?'block':'none';
+  document.getElementById('sec-nut').style.display = showNut?'flex':'none';
+
+  const loteId = document.getElementById('et-lote').value;
+  const peso   = document.getElementById('et-peso').value||'—';
+  const wMM    = parseFloat(document.getElementById('et-w').value)||60;
+  const hMM    = parseFloat(document.getElementById('et-h').value)||40;
+  const prev   = document.getElementById('et-preview');
+
+  if(!loteId){
+    prev.innerHTML='<div class="empty"><div class="empty-ico">🏷</div><div class="empty-txt">Selecciona un lote para<br>previsualizar la etiqueta</div></div>';
+    return;
+  }
+  const l = lotes.find(x=>x.id===loteId);
+  if(!l) return;
+
+  const {html, bId, fs} = buildEtiquetaContent(l, peso, wMM, hMM);
+  prev.innerHTML = `<div style="background:var(--s2);padding:16px;border-radius:12px;display:inline-block;">${html}</div>`;
+  if(chk('ec-bar')) try{
+    const bh = Math.max(Math.round(calcFS(wMM,hMM)*2.2), 16);
+    JsBarcode('#'+bId, l.numero_lote, {format:'CODE128',width:1.2,height:bh,displayValue:false,margin:0});
+  }catch(e){}
+}
+
+function getCommonCSS(){
+  return `@import url('https://fonts.googleapis.com/css2?family=Syne:wght@900&display=swap');
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{background:#fff;font-family:Arial,sans-serif;}
+    table{border-collapse:collapse;}`;
+}
+
+function imprimirRollo(){
+  const loteId = document.getElementById('et-lote').value;
+  if(!loteId){toast('Selecciona un lote primero','err');return;}
+  const l = lotes.find(x=>x.id===loteId);
+  const peso  = document.getElementById('et-peso').value||'—';
+  const wMM   = parseFloat(document.getElementById('et-w').value)||60;
+  const hMM   = parseFloat(document.getElementById('et-h').value)||40;
+  const copias= parseInt(document.getElementById('et-copias').value)||1;
+
+  // Build copias con barcodes únicos
+  let allHtml = '';
+  const bcIds = [];
+  for(let i=0;i<copias;i++){
+    const bId = 'bc-r-'+i+'-'+Date.now();
+    bcIds.push({id:bId, lote:l.numero_lote, wMM, hMM});
+    const {html} = buildEtiquetaContent({...l}, peso, wMM, hMM);
+    allHtml += html.replace(/id="bc-[^"]+"/,'id="'+bId+'"')
+                   .replace(/id="et-print-area"/,'id="et-print-area-'+i+'"') + '\n';
+  }
+
+  const bcScript = bcIds.map(b=>{
+    const bh = Math.max(Math.round(calcFS(b.wMM,b.hMM)*2.2),16);
+    return `try{JsBarcode('#${b.id}','${b.lote}',{format:'CODE128',width:1.2,height:${bh},displayValue:false,margin:0});}catch(e){}`;
+  }).join('\n');
+
+  const w = window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Etiquetas</title>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"><\/script>
+    <style>
+      ${getCommonCSS()}
+      body{margin:0;padding:0;}
+      /* Rollo: etiquetas precortadas - solo configurar tamaño */
+      @page{size:${wMM}mm ${hMM}mm;margin:0;}
+      body{margin:0;padding:0;}
+      div[id^="et-print-area"]{
+        width:${wMM}mm!important;
+        min-height:${hMM}mm!important;
+        max-height:${hMM}mm!important;
+        overflow:hidden;
+        border:none!important;
+        page-break-after:always;
+        display:block;
+      }
+    </style>
+  </head><body>
+    ${allHtml}
+    <script>
+      ${bcScript}
+      setTimeout(()=>{window.focus();window.print();},700);
+    <\/script>
+  </body></html>`);
+  w.document.close();
+}
+
+function imprimirA4(){
+  const loteId = document.getElementById('et-lote').value;
+  if(!loteId){toast('Selecciona un lote primero','err');return;}
+  const l = lotes.find(x=>x.id===loteId);
+  const peso  = document.getElementById('et-peso').value||'—';
+  const wMM   = parseFloat(document.getElementById('et-w').value)||60;
+  const hMM   = parseFloat(document.getElementById('et-h').value)||40;
+  const copias= parseInt(document.getElementById('et-copias').value)||6;
+
+  // Calcular cuántas caben en A4 (210x297mm, margen 5mm)
+  const cols = Math.floor((210-10)/wMM);
+  const rows = Math.floor((297-10)/hMM);
+  const perPage = Math.max(cols*rows,1);
+
+  let allHtml = '';
+  const bcIds = [];
+  for(let i=0;i<copias;i++){
+    const bId = 'bc-a-'+i+'-'+Date.now();
+    bcIds.push({id:bId, lote:l.numero_lote, wMM, hMM});
+    const {html} = buildEtiquetaContent({...l}, peso, wMM, hMM);
+    allHtml += '<div class="et-item">'+html.replace(/id="bc-[^"]+"/,'id="'+bId+'"')+'</div>';
+  }
+
+  const bcScript = bcIds.map(b=>{
+    const bh = Math.max(Math.round(calcFS(b.wMM,b.hMM)*2.2),16);
+    return `try{JsBarcode('#${b.id}','${b.lote}',{format:'CODE128',width:1.2,height:${bh},displayValue:false,margin:0});}catch(e){}`;
+  }).join('\n');
+
+  const w = window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Etiquetas A4</title>
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"><\/script>
+    <style>
+      ${getCommonCSS()}
+      @page{size:A4;margin:5mm;}
+      body{margin:0;}
+      .grid{display:flex;flex-wrap:wrap;gap:2mm;}
+      .et-item{break-inside:avoid;}
+      div[id^="et-print-area"]{border:0.3px dashed #ccc!important;}
+    </style>
+  </head><body>
+    <div class="grid">${allHtml}</div>
+    <script>
+      ${bcScript}
+      setTimeout(()=>{window.focus();window.print();},700);
+    <\/script>
+  </body></html>`);
+  w.document.close();
+}
+
+
+
+// ═══════════════════════════ DATOS DE MUESTRA ════════════════
+async function cargarDatosMuestra(){
+  if(!confirm('¿Cargar datos de muestra? Esto añadirá productos y lotes de ejemplo en Supabase para probar el sistema.')) return;
+  sync('busy','Cargando datos de muestra…');
+  try{
+    // Productos de muestra
+    const prods = [
+      {nombre:'Lomo de cerdo',categoria:'carniceria',vida_util_dias:5,unidad:'kg',ingredientes:'Lomo de cerdo',alergenos:'',activo:true},
+      {nombre:'Chorizo fresco',categoria:'carniceria',vida_util_dias:4,unidad:'kg',ingredientes:'Carne de cerdo, pimentón, sal, ajo',alergenos:'',activo:true},
+      {nombre:'Carne picada mixta',categoria:'carniceria',vida_util_dias:2,unidad:'kg',ingredientes:'Carne de cerdo, carne de ternera',alergenos:'',activo:true},
+      {nombre:'Lacón adobado',categoria:'carniceria',vida_util_dias:6,unidad:'kg',ingredientes:'Lacón de cerdo, pimentón, ajo, sal, aceite',alergenos:'',activo:true},
+      {nombre:'Fondo de ternera',categoria:'cocina',vida_util_dias:4,unidad:'L',ingredientes:'Huesos de ternera, cebolla, zanahoria, apio, tomate',alergenos:'Apio',activo:true},
+      {nombre:'Caldo de pollo',categoria:'cocina',vida_util_dias:4,unidad:'L',ingredientes:'Carcasas de pollo, cebolla, zanahoria, puerro, perejil',alergenos:'Apio',activo:true},
+      {nombre:'Sofrito base',categoria:'cocina',vida_util_dias:5,unidad:'kg',ingredientes:'Cebolla, tomate, ajo, aceite de oliva',alergenos:'',activo:true},
+      {nombre:'Lacón con grelos',categoria:'cocina',vida_util_dias:3,unidad:'raciones',ingredientes:'Lacón, grelos, patata, chorizo, aceite',alergenos:'',activo:true},
+      {nombre:'Empanada de carne',categoria:'cocina',vida_util_dias:3,unidad:'ud',ingredientes:'Harina de trigo, carne de cerdo, cebolla, pimiento, aceite, sal',alergenos:'Gluten, Huevo',activo:true},
+      {nombre:'Croquetas de jamón',categoria:'cocina',vida_util_dias:3,unidad:'ud',ingredientes:'Leche, harina, jamón serrano, mantequilla, huevo, pan rallado',alergenos:'Gluten, Lácteos, Huevo',activo:true},
+    ];
+
+    const insertedProds = [];
+    for(const p of prods){
+      const res = await sb('productos', {method:'POST', body:JSON.stringify(p), headers:{...H,'Prefer':'return=representation'}});
+      insertedProds.push(res[0]);
+    }
+
+    // Lotes de muestra
+    const hoy = new Date();
+    const d = (offset) => {const dd=new Date(hoy);dd.setDate(dd.getDate()+offset);return dd.toISOString().split('T')[0];};
+    const pid = (nombre) => insertedProds.find(p=>p.nombre===nombre)?.id;
+
+    const lotesDemo = [
+      // Carnicería - lotes activos
+      {numero_lote:'CAR-'+d(0).replace(/-/g,'')+'-001', producto_id:pid('Lomo de cerdo'), producto_nombre:'Lomo de cerdo', categoria:'carniceria', origen:'carniceria', fecha_elaboracion:d(-1), fecha_caducidad:d(4), cantidad_total:25, cantidad_disponible:25, unidad:'kg', ingredientes:'Lomo de cerdo (Proveedor: Frigoríficos Galicia, Lote: FG-2026-0224)', alergenos:'', estado:'activo', trazabilidad:[]},
+      {numero_lote:'CAR-'+d(0).replace(/-/g,'')+'-002', producto_id:pid('Chorizo fresco'), producto_nombre:'Chorizo fresco', categoria:'carniceria', origen:'carniceria', fecha_elaboracion:d(0), fecha_caducidad:d(4), cantidad_total:12, cantidad_disponible:8, unidad:'kg', ingredientes:'Carne de cerdo, pimentón de la Vera, sal, ajo', alergenos:'', estado:'activo', trazabilidad:[]},
+      {numero_lote:'CAR-'+d(0).replace(/-/g,'')+'-003', producto_id:pid('Carne picada mixta'), producto_nombre:'Carne picada mixta', categoria:'carniceria', origen:'carniceria', fecha_elaboracion:d(0), fecha_caducidad:d(2), cantidad_total:18, cantidad_disponible:18, unidad:'kg', ingredientes:'Carne de cerdo 60%, carne de ternera 40%', alergenos:'', estado:'activo', trazabilidad:[]},
+      {numero_lote:'CAR-'+d(0).replace(/-/g,'')+'-004', producto_id:pid('Lacón adobado'), producto_nombre:'Lacón adobado', categoria:'carniceria', origen:'carniceria', fecha_elaboracion:d(-2), fecha_caducidad:d(4), cantidad_total:30, cantidad_disponible:22, unidad:'kg', ingredientes:'Lacón de cerdo, pimentón, ajo, sal', alergenos:'', estado:'activo', trazabilidad:[]},
+      // Caducado de muestra
+      {numero_lote:'CAR-20260222-001', producto_id:pid('Carne picada mixta'), producto_nombre:'Carne picada mixta', categoria:'carniceria', origen:'carniceria', fecha_elaboracion:d(-4), fecha_caducidad:d(-2), cantidad_total:10, cantidad_disponible:3, unidad:'kg', ingredientes:'Carne de cerdo, ternera', alergenos:'', estado:'activo', trazabilidad:[]},
+      // Cocina - elaboraciones intermedias
+      {numero_lote:'COC-'+d(0).replace(/-/g,'')+'-001', producto_id:pid('Fondo de ternera'), producto_nombre:'Fondo de ternera', categoria:'cocina', origen:'cocina', fecha_elaboracion:d(-1), fecha_caducidad:d(3), cantidad_total:20, cantidad_disponible:15, unidad:'L', ingredientes:'Huesos de ternera (Lote: CAR-20260224-001), cebolla, zanahoria, apio, tomate, agua', alergenos:'Apio', estado:'activo', trazabilidad:[{loteNum:'CAR-20260224-001',nombre:'Huesos de ternera',cantidad:5,unidad:'kg',tipo:'albaran'}]},
+      {numero_lote:'COC-'+d(0).replace(/-/g,'')+'-002', producto_id:pid('Caldo de pollo'), producto_nombre:'Caldo de pollo', categoria:'cocina', origen:'cocina', fecha_elaboracion:d(0), fecha_caducidad:d(4), cantidad_total:30, cantidad_disponible:30, unidad:'L', ingredientes:'Carcasas de pollo, cebolla, zanahoria, puerro, perejil, agua', alergenos:'Apio', estado:'activo', trazabilidad:[]},
+      {numero_lote:'COC-'+d(0).replace(/-/g,'')+'-003', producto_id:pid('Sofrito base'), producto_nombre:'Sofrito base', categoria:'cocina', origen:'cocina', fecha_elaboracion:d(0), fecha_caducidad:d(5), cantidad_total:8, cantidad_disponible:8, unidad:'kg', ingredientes:'Cebolla, tomate triturado, ajo, aceite de oliva virgen extra', alergenos:'', estado:'activo', trazabilidad:[]},
+      // Elaborados finales usando fondos
+      {numero_lote:'COC-'+d(0).replace(/-/g,'')+'-004', producto_id:pid('Lacón con grelos'), producto_nombre:'Lacón con grelos', categoria:'cocina', origen:'cocina', fecha_elaboracion:d(0), fecha_caducidad:d(3), cantidad_total:40, cantidad_disponible:40, unidad:'raciones', ingredientes:'Lacón adobado (Lote: CAR-20260224-004), grelos, patata, chorizo (Lote: CAR-20260224-002), fondo de ternera (Lote: COC-20260224-001)', alergenos:'', estado:'activo', trazabilidad:[{loteNum:'COC-20260224-001',nombre:'Fondo de ternera',cantidad:5,unidad:'L'},{loteNum:'CAR-20260224-004',nombre:'Lacón adobado',cantidad:8,unidad:'kg'}]},
+      {numero_lote:'COC-'+d(0).replace(/-/g,'')+'-005', producto_id:pid('Empanada de carne'), producto_nombre:'Empanada de carne', categoria:'cocina', origen:'cocina', fecha_elaboracion:d(0), fecha_caducidad:d(3), cantidad_total:12, cantidad_disponible:12, unidad:'ud', ingredientes:'Masa de harina de trigo, carne picada mixta (Lote: CAR-20260224-003), cebolla, pimiento, sofrito (Lote: COC-20260224-003)', alergenos:'Gluten, Huevo', estado:'activo', trazabilidad:[{loteNum:'CAR-20260224-003',nombre:'Carne picada',cantidad:6,unidad:'kg'},{loteNum:'COC-20260224-003',nombre:'Sofrito base',cantidad:2,unidad:'kg'}]},
+      {numero_lote:'COC-'+d(0).replace(/-/g,'')+'-006', producto_id:pid('Croquetas de jamón'), producto_nombre:'Croquetas de jamón', categoria:'cocina', origen:'cocina', fecha_elaboracion:d(0), fecha_caducidad:d(3), cantidad_total:120, cantidad_disponible:120, unidad:'ud', ingredientes:'Leche entera, harina de trigo, jamón serrano, mantequilla, huevo, pan rallado', alergenos:'Gluten, Lácteos, Huevo', estado:'activo', trazabilidad:[]},
+    ];
+
+    for(const l of lotesDemo){
+      await sb('lotes', {method:'POST', body:JSON.stringify(l), headers:{...H,'Prefer':'return=minimal'}});
+    }
+
+    // Distribuciones de muestra
+    const lotesInserted = await sb('lotes?order=created_at.desc&limit=20');
+    const findLote = (nombre) => lotesInserted.find(l=>l.producto_nombre===nombre);
+    const lLacon = findLote('Lacón con grelos');
+    const lEmpanada = findLote('Empanada de carne');
+    const lChorizo = findLote('Chorizo fresco');
+    if(lLacon) await sb('distribuciones',{method:'POST',body:JSON.stringify({lote_id:lLacon.id,numero_lote:lLacon.numero_lote,producto_nombre:'Lacón con grelos',tienda:'Castros',cantidad:15,unidad:'raciones',fecha:d(0),notas:'Entrega mañana'}),headers:{...H,'Prefer':'return=minimal'}});
+    if(lLacon) await sb('distribuciones',{method:'POST',body:JSON.stringify({lote_id:lLacon.id,numero_lote:lLacon.numero_lote,producto_nombre:'Lacón con grelos',tienda:'Carral',cantidad:20,unidad:'raciones',fecha:d(0),notas:''}),headers:{...H,'Prefer':'return=minimal'}});
+    if(lEmpanada) await sb('distribuciones',{method:'POST',body:JSON.stringify({lote_id:lEmpanada.id,numero_lote:lEmpanada.numero_lote,producto_nombre:'Empanada de carne',tienda:'Castros',cantidad:6,unidad:'ud',fecha:d(0),notas:''}),headers:{...H,'Prefer':'return=minimal'}});
+    if(lChorizo) await sb('distribuciones',{method:'POST',body:JSON.stringify({lote_id:lChorizo.id,numero_lote:lChorizo.numero_lote,producto_nombre:'Chorizo fresco',tienda:'Carral',cantidad:4,unidad:'kg',fecha:d(0),notas:''}),headers:{...H,'Prefer':'return=minimal'}});
+
+    toast('✅ Datos de muestra cargados','ok');
+    await cargarTodo();
+  }catch(e){
+    sync('err','Error');
+    toast('❌ '+e.message,'err');
+    console.error(e);
+  }
+}
+
+// ═══════════════════════════ PRODUCTOS ═══════════════════════
+function renderProductos(){
+  const list=document.getElementById('productos-list');
+  if(!productos.length){list.innerHTML='<div class="empty"><div class="empty-ico">📋</div><div class="empty-txt">Sin productos en el catálogo.<br>Añade los productos que elaboráis.</div></div>';return;}
+  list.innerHTML=productos.map(p=>`
+    <div class="prod-card" style="margin-bottom:8px;">
+      <div class="prod-ico ${p.categoria}">${p.categoria==='carniceria'?'🥩':'🍳'}</div>
+      <div class="prod-info">
+        <div class="prod-name">${p.nombre}</div>
+        <div class="prod-meta">${p.vida_util_dias} días · ${p.unidad||'kg'}${p.alergenos?' · ⚠️ '+p.alergenos:''}</div>
+      </div>
+      <div class="prod-actions">
+        <button class="btn btn-sm" onclick="editarProducto('${p.id}')">✏️</button>
+      </div>
+    </div>`).join('');
+}
+
+function abrirModalProducto(){
+  document.getElementById('mp-id').value='';
+  document.getElementById('mp-nombre').value='';
+  document.getElementById('mp-categoria').value='carniceria';
+  document.getElementById('mp-vida').value='3';
+  document.getElementById('mp-unidad').value='kg';
+  document.getElementById('mp-ingredientes').value='';
+  document.getElementById('mp-alergenos').value='';
+  document.getElementById('modal-prod-title').textContent='Nuevo producto';
+  document.getElementById('modal-producto').classList.add('open');
+}
+function cerrarModalProducto(){document.getElementById('modal-producto').classList.remove('open');}
+function editarProducto(id){
+  const p=productos.find(x=>x.id===id);if(!p)return;
+  document.getElementById('mp-id').value=p.id;
+  document.getElementById('mp-nombre').value=p.nombre;
+  document.getElementById('mp-categoria').value=p.categoria;
+  document.getElementById('mp-vida').value=p.vida_util_dias;
+  document.getElementById('mp-unidad').value=p.unidad||'kg';
+  document.getElementById('mp-ingredientes').value=p.ingredientes||'';
+  document.getElementById('mp-alergenos').value=p.alergenos||'';
+  document.getElementById('modal-prod-title').textContent='Editar producto';
+  document.getElementById('modal-producto').classList.add('open');
+}
+async function guardarProducto(){
+  const id=document.getElementById('mp-id').value;
+  const nombre=document.getElementById('mp-nombre').value.trim();
+  if(!nombre){toast('El nombre es obligatorio','err');return;}
+  const payload={nombre,categoria:document.getElementById('mp-categoria').value,vida_util_dias:parseInt(document.getElementById('mp-vida').value)||3,unidad:document.getElementById('mp-unidad').value,ingredientes:document.getElementById('mp-ingredientes').value.trim(),alergenos:document.getElementById('mp-alergenos').value.trim(),activo:true};
+  sync('busy','Guardando…');
+  try{
+    if(id){
+      await sb('productos?id=eq.'+id,{method:'PATCH',body:JSON.stringify(payload),headers:{...H,'Prefer':'return=minimal'}});
+      const idx=productos.findIndex(x=>x.id===id);
+      if(idx>=0)productos[idx]={...productos[idx],...payload};
+    }else{
+      const res=await sb('productos',{method:'POST',body:JSON.stringify(payload),headers:{...H,'Prefer':'return=representation'}});
+      productos.push(res[0]);
+    }
+    sync('ok','Guardado ✓');
+    renderProductos();
+    actualizarProductos();
+    cerrarModalProducto();
+    toast(id?'✅ Producto actualizado':'✅ Producto añadido','ok');
+  }catch(e){sync('err','Error');toast('❌ '+e.message,'err');}
+}
+
+// ═══════════════════════════ RETIRAR LOTE ════════════════════
+async function retirarLote(){
+  if(!loteModalActual)return;
+  if(!confirm('¿Retirar el lote '+loteModalActual.numero_lote+'? Esta acción registra que el lote ha sido retirado del uso.'))return;
+  await retirarLoteId(loteModalActual.id);
+  cerrarModalLote();
+}
+async function retirarLoteId(id){
+  try{
+    await sb('lotes?id=eq.'+id,{method:'PATCH',body:JSON.stringify({estado:'retirado'}),headers:{...H,'Prefer':'return=minimal'}});
+    const l=lotes.find(x=>x.id===id);if(l)l.estado='retirado';
+    renderTodo();toast('⚠️ Lote retirado','info');
+  }catch(e){toast('❌ '+e.message,'err');}
+}
+
+// ═══════════════════════════ HELPERS ════════════════════════
+function hoy(){return new Date().toISOString().split('T')[0];}
+function escAttr(s){return String(s||'').replace(/"/g,'&quot;');}
+function toast(msg,type='ok'){const t=document.getElementById('toast');t.textContent=msg;t.className='toast '+type;t.style.display='block';clearTimeout(t._t);t._t=setTimeout(()=>t.style.display='none',3200);}
+</script>
+</body>
+</html>
